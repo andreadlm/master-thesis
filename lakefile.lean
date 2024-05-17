@@ -13,4 +13,3 @@ require mathlib from git
 
 @[default_target]
 lean_lib «MasterThesis» where
-  -- add any library configuration options here

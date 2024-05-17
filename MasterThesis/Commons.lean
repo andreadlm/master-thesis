@@ -1,0 +1,1 @@
+abbrev ident := String
