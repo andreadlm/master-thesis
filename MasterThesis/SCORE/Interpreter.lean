@@ -9,12 +9,12 @@ mutual
   def eval (P : com) (s : store) : store :=
     match P with
     | SKIP    => s
-    | CON x   => store.update x (0 :: (s x)) s
+    | CON x   => [x ↦ (0 :: (s x))] s
     | NOC x   => match s x with
-                 | 0 :: t => store.update x t s
+                 | 0 :: t => [x ↦ t] s
                  | _      => s -- CHECK: error?
-    | DEC x   => store.update x (((s x).head! - 1) :: (s x).tail!) s
-    | INC x   => store.update x (((s x).head! + 1) :: (s x).tail!) s
+    | DEC x   => [x ↦ (((s x).head! - 1) :: (s x).tail!)] s
+    | INC x   => [x ↦ (((s x).head! + 1) :: (s x).tail!)] s
     | SEQ P Q => (eval Q) (eval P s)
     | FOR x P => match (s x).head! with
                  | Int.ofNat   v => Nat.iterate (fun s' => eval P s') v s
@@ -24,11 +24,11 @@ mutual
     match P with
     | SKIP    => s
     | CON x   => match s x with
-                 | 0 :: t => store.update x t s
+                 | 0 :: t => [x ↦ t] s
                  | _      => s -- CHECK: error?
-    | NOC x   => store.update x (0 :: (s x)) s
-    | DEC x   => store.update x (((s x).head! + 1) :: (s x).tail!) s
-    | INC x   => store.update x (((s x).head! - 1) :: (s x).tail!) s
+    | NOC x   => [x ↦ (0 :: (s x))] s
+    | DEC x   => [x ↦ (((s x).head! + 1) :: (s x).tail!)] s
+    | INC x   => [x ↦ (((s x).head! - 1) :: (s x).tail!)] s
     | SEQ P Q => (evalI P) (evalI Q s)
     | FOR x P => match (s x).head! with
                  | Int.ofNat   v => Nat.iterate (fun s' => evalI P s') v s
