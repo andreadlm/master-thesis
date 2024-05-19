@@ -11,20 +11,20 @@ namespace store
 def emp : store := fun _ => []
 
 def update (x : ident) (l : List Int) (s : store) : store :=
-  fun (y : ident) => if x == y then l else (s y)
+  fun (y : ident) => if x = y then l else (s y)
 
 notation "[" x " ↦ " l "]" s => update x l s -- Migliorare?
 notation "[" x " ↦ " l "]"   => [x ↦ l] emp -- Migliorare?
 
 #eval (["z" ↦ [3]] ["y" ↦ [2]] ["x" ↦ [1]]) "x"
 
-theorem update_same (s : store) (x y : ident) (l : List Int) : x == y → (store.update x l s) y = l := by
+theorem update_same {s : store} {x y : ident} {l : List Int} : x = y → (store.update x l s) y = l := by
   intros
   unfold update
   apply if_pos
   assumption
 
-theorem update_other (s : store) (x y : ident) (l : List Int) : ¬(x == y) → (store.update x l s) y = s y := by
+theorem update_other {s : store} {x y : ident} {l : List Int} : x ≠ y → (store.update x l s) y = s y := by
   intros
   unfold update
   apply if_neg

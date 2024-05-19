@@ -22,12 +22,38 @@ def LOOP2SCORE (Lc : LOOP.com) : SCORE.com :=
 namespace LOOP2SCORE
 
 def eqStores (σ : LOOP.store) (τ : SCORE.store) : Prop :=
-  ∀ (x : ident), σ x = (τ x).head!
+  ∀ (x : ident), σ x = List.head! (τ x)
 
 infix:100 "=ₛ" => eqStores
 
-theorem soundness : ∀ (Lc : LOOP.com) (σ : LOOP.store) (τ : SCORE.store), σ =ₛ τ → (LOOP.eval Lc σ) =ₛ (SCORE.eval (LOOP2SCORE Lc) τ) :=
-  sorry
+theorem soundness (LP : LOOP.com) (σ : LOOP.store) (τ : SCORE.store) : σ =ₛ τ → (LOOP.eval LP σ) =ₛ (SCORE.eval (LOOP2SCORE LP) τ) := by
+  intros
+  induction LP with
+  | SKIP =>
+    simp[LOOP.eval, LOOP2SCORE, SCORE.eval]
+    assumption
+  | ZER x =>
+    simp[LOOP.eval, LOOP2SCORE, SCORE.eval]
+    intro y
+    cases eq_or_ne x y with
+    | inl =>
+      simp[List.head!, store.update_same ‹x = y›, LOOP.store.update_same ‹x = y›]
+    | inr =>
+      simp[store.update_other ‹x ≠ y›, LOOP.store.update_other ‹x ≠ y›]
+      apply ‹σ =ₛ τ› y
+  | ASN x y => sorry
+  | INC x =>
+    simp[LOOP.eval, LOOP2SCORE, SCORE.eval]
+    intro y
+    cases eq_or_ne x y with
+    | inl =>
+      simp[List.head!, store.update_same ‹x = y›, LOOP.store.update_same ‹x = y›]
+      apply ‹σ =ₛ τ› x
+    | inr =>
+      simp[List.head!, store.update_other ‹x ≠ y›, LOOP.store.update_other ‹x ≠ y›]
+      apply ‹σ =ₛ τ› y
+  | SEQ LQ LR => sorry
+  | FOR x LQ => sorry
 
 end LOOP2SCORE
 
