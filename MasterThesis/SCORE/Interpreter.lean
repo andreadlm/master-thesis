@@ -6,35 +6,35 @@ namespace SCORE
 open SCORE.com
 
 mutual
-  def eval (P : com) (σ : store) : store :=
+  def eval (P : com) (τ : store) : store :=
     match P with
-    | SKIP    => σ
-    | CON x   => [x ↦ (0 :: (σ x))] σ
-    | NOC x   => match σ x with
-                 | 0 :: t => [x ↦ t] σ
-                 | _      => σ -- CHECK: error?
-    | DEC x   => [x ↦ (((σ x).head! - 1) :: (σ x).tail!)] σ
-    | INC x   => [x ↦ (((σ x).head! + 1) :: (σ x).tail!)] σ
-    | SEQ P Q => (eval Q) (eval P σ)
-    | FOR x P => match (σ x).head! with
-                 | Int.ofNat   v => (fun τ  => eval P τ)^[v] σ
-                 | Int.negSucc v => (fun τ => evalI P τ)^[v.succ] σ
+    | SKIP    => τ
+    | CON x   => [x ↦ (0 :: (τ x))] τ
+    | NOC x   => match τ x with
+                 | 0 :: t => [x ↦ t] τ
+                 | _      => τ -- CHECK: error?
+    | DEC x   => [x ↦ (((τ x).head! - 1) :: (τ x).tail!)] τ
+    | INC x   => [x ↦ (((τ x).head! + 1) :: (τ x).tail!)] τ
+    | SEQ P Q => (eval Q) (eval P τ)
+    | FOR x P => match (τ x).head! with
+                 | Int.ofNat   v => (fun τ'  => eval P τ')^[v] τ
+                 | Int.negSucc v => (fun τ' => evalI P τ')^[v.succ] τ
 
-  def evalI (P : com) (σ : store) : store :=
+  def evalI (P : com) (τ : store) : store :=
     match P with
-    | SKIP    => σ
-    | CON x   => match σ x with
-                 | 0 :: t => [x ↦ t] σ
-                 | _      => σ -- CHECK: error?
-    | NOC x   => [x ↦ (0 :: (σ x))] σ
-    | DEC x   => [x ↦ (((σ x).head! + 1) :: (σ x).tail!)] σ
-    | INC x   => [x ↦ (((σ x).head! - 1) :: (σ x).tail!)] σ
-    | SEQ P Q => (evalI P) (evalI Q σ)
-    | FOR x P => match (σ x).head! with
-                 | Int.ofNat   v => (fun τ => evalI P τ)^[v] σ
-                 | Int.negSucc v => (fun τ => eval P τ)^[v.succ] σ
+    | SKIP    => τ
+    | CON x   => match τ x with
+                 | 0 :: t => [x ↦ t] τ
+                 | _      => τ -- CHECK: error?
+    | NOC x   => [x ↦ (0 :: (τ x))] τ
+    | DEC x   => [x ↦ (((τ x).head! + 1) :: (τ x).tail!)] τ
+    | INC x   => [x ↦ (((τ x).head! - 1) :: (τ x).tail!)] τ
+    | SEQ P Q => (evalI P) (evalI Q τ)
+    | FOR x P => match (τ x).head! with
+                 | Int.ofNat   v => (fun τ' => evalI P τ')^[v] τ
+                 | Int.negSucc v => (fun τ' => eval P τ')^[v.succ] τ
 end
 
-theorem inv_evalI (P : com) (σ : store) : eval (inv P) σ = evalI P σ := sorry
+theorem inv_evalI (P : com) (τ : store) : eval (inv P) τ = evalI P τ := sorry
 
 end SCORE
