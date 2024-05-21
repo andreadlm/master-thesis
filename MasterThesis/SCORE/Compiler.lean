@@ -39,13 +39,10 @@ def Iterate.rec_pair {f : α → α} {g : β → β} {a : α} {b : β} (p : α �
 end Function
 
 theorem soundness (LP : LOOP.com) (σ : LOOP.store) (τ : SCORE.store) : σ =ₛ τ → (LOOP.eval LP σ) =ₛ (SCORE.eval (L2S LP) τ) := by
-  intro
-  induction LP generalizing σ τ with -- Necessario?
-  | SKIP =>
-    rewrite[LOOP.eval, L2S, SCORE.eval]
-    assumption
-  | ZER x =>
-    rewrite[LOOP.eval, L2S, SCORE.eval]
+  intro eqStores
+  induction LP generalizing σ τ <;> rewrite[LOOP.eval, L2S, SCORE.eval]
+  case SKIP => assumption
+  case ZER x =>
     intro y
     cases eq_or_ne x y with
     | inl =>
@@ -56,8 +53,7 @@ theorem soundness (LP : LOOP.com) (σ : LOOP.store) (τ : SCORE.store) : σ =ₛ
     | inr =>
       rewrite[store.update_other ‹x ≠ y›, LOOP.store.update_other ‹x ≠ y›]
       apply ‹σ =ₛ τ› y
-  | INC x =>
-    rewrite[LOOP.eval, L2S, SCORE.eval]
+  case INC x =>
     intro y
     cases eq_or_ne x y with
     | inl =>
@@ -69,24 +65,19 @@ theorem soundness (LP : LOOP.com) (σ : LOOP.store) (τ : SCORE.store) : σ =ₛ
     | inr =>
       rewrite[store.update_other ‹x ≠ y›, LOOP.store.update_other ‹x ≠ y›]
       apply ‹σ =ₛ τ› y
-  | SEQ LQ LR ih₁ ih₂ =>
-     rewrite[LOOP.eval, L2S, SCORE.eval]
+  case SEQ LQ LR ih₁ ih₂ =>
      apply ih₂
      apply ih₁
      assumption
-  | FOR x LQ ih₁ =>
-    rewrite[LOOP.eval, L2S, SCORE.eval]
+  case FOR x LQ ih₁ =>
     simp[←(‹σ =ₛ τ› x)]
-    induction (σ x) generalizing σ τ with
-    | zero =>
-      simp
-      assumption
-    | succ m ih₂ =>
-      simp
+    induction (σ x) generalizing σ τ <;> simp
+    case zero => assumption
+    case succ m ih₂ =>
       apply ih₂
       apply ih₁
       assumption
-  | ASN x y => sorry
+  case ASN x y => sorry
 end L2S
 
 end SCORE
