@@ -15,7 +15,7 @@ mutual
                  | _      => τ -- CHECK: error?
     | DEC x   => [x ↦ (((τ x).head! - 1) :: (τ x).tail!)] τ
     | INC x   => [x ↦ (((τ x).head! + 1) :: (τ x).tail!)] τ
-    | SEQ P Q => (eval Q) (eval P τ)
+    | SEQ P Q => ((eval Q) ∘ (eval P)) τ
     | FOR x P => match (τ x).head! with
                  | Int.ofNat   v => (fun τ'  => eval P τ')^[v] τ
                  | Int.negSucc v => (fun τ' => evalI P τ')^[v.succ] τ
@@ -29,7 +29,7 @@ mutual
     | NOC x   => [x ↦ (0 :: (τ x))] τ
     | DEC x   => [x ↦ (((τ x).head! + 1) :: (τ x).tail!)] τ
     | INC x   => [x ↦ (((τ x).head! - 1) :: (τ x).tail!)] τ
-    | SEQ P Q => (evalI P) (evalI Q τ)
+    | SEQ P Q => ((evalI P) ∘ (evalI Q)) τ
     | FOR x P => match (τ x).head! with
                  | Int.ofNat   v => (fun τ' => evalI P τ')^[v] τ
                  | Int.negSucc v => (fun τ' => eval P τ')^[v.succ] τ
