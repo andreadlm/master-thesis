@@ -28,16 +28,6 @@ def eqStores (σ : LOOP.store) (τ : SCORE.store) : Prop :=
 
 infix:100 "=ₛ" => eqStores
 
-namespace Function
-
-def Iterate.rec_pair {f : α → α} {g : β → β} {a : α} {b : β} (p : α → β → Sort*) (h : ∀ a b, p a b → p (f a) (g b)) (hab : p a b) (n : ℕ) :
-  p (f^[n] a) (g^[n] b) :=
-  match n with
-  | 0 => hab
-  | (m + 1) => Iterate.rec_pair p h (h a b hab) m
-
-end Function
-
 theorem soundness (LP : LOOP.com) (σ : LOOP.store) (τ : SCORE.store) : σ =ₛ τ → (LOOP.eval LP σ) =ₛ (SCORE.eval (L2S LP) τ) := by
   intro eqStores
   induction LP generalizing σ τ <;> rewrite[LOOP.eval, L2S, SCORE.eval]
