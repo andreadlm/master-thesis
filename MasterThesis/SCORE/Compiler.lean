@@ -28,47 +28,64 @@ def eqStores (σ : LOOP.store) (τ : SCORE.store) : Prop :=
 
 infix:100 "=ₛ" => eqStores
 
+namespace Function
+
+def Iterate.rec_pair {f : α → α} {g : β → β} {a : α} {b : β} (p : α → β → Sort*) (h : ∀ a b, p a b → p (f a) (g b)) (hab : p a b) (n : ℕ) :
+  p (f^[n] a) (g^[n] b) :=
+  match n with
+  | 0 => hab
+  | (m + 1) => Iterate.rec_pair p h (h a b hab) m
+
+end Function
+
 theorem soundness (LP : LOOP.com) (σ : LOOP.store) (τ : SCORE.store) : σ =ₛ τ → (LOOP.eval LP σ) =ₛ (SCORE.eval (L2S LP) τ) := by
   intro
-  induction LP generalizing σ τ with
-  | SKIP => simp[LOOP.eval, L2S, SCORE.eval]; assumption
+  induction LP generalizing σ τ with -- Necessario?
+  | SKIP =>
+    rewrite[LOOP.eval, L2S, SCORE.eval]
+    assumption
   | ZER x =>
     rewrite[LOOP.eval, L2S, SCORE.eval]
     intro y
     cases eq_or_ne x y with
     | inl =>
-      simp[List.head!, store.update_same ‹x = y›, LOOP.store.update_same ‹x = y›]
+      rewrite[List.head!]
+      simp[store.update_same ‹x = y›]
+      rewrite[LOOP.store.update_same ‹x = y›]
+      rfl
     | inr =>
-      simp[store.update_other ‹x ≠ y›, LOOP.store.update_other ‹x ≠ y›]; apply ‹σ =ₛ τ› y
+      rewrite[store.update_other ‹x ≠ y›, LOOP.store.update_other ‹x ≠ y›]
+      apply ‹σ =ₛ τ› y
   | INC x =>
     rewrite[LOOP.eval, L2S, SCORE.eval]
     intro y
     cases eq_or_ne x y with
     | inl =>
-      simp[List.head!, store.update_same ‹x = y›, LOOP.store.update_same ‹x = y›] -- Possibile rimuovere il simp?
+      rewrite[List.head!]
+      simp[store.update_same ‹x = y›]
+      rewrite[LOOP.store.update_same ‹x = y›]
+      simp -- Chiamata esplicita?
       apply ‹σ =ₛ τ› x
     | inr =>
-      simp[List.head!, store.update_other ‹x ≠ y›, LOOP.store.update_other ‹x ≠ y›] -- Possibile rimuovere il simp?
+      rewrite[store.update_other ‹x ≠ y›, LOOP.store.update_other ‹x ≠ y›]
       apply ‹σ =ₛ τ› y
   | SEQ LQ LR ih₁ ih₂ =>
      rewrite[LOOP.eval, L2S, SCORE.eval]
-     apply ih₂ (LOOP.eval LQ σ) (eval (L2S LQ) τ) (ih₁ σ τ ‹σ =ₛ τ›)
-  | FOR x LQ ih =>
-    rewrite[L2S, LOOP.eval, SCORE.eval]
-    have := ‹σ =ₛ τ› x
-    split
-    case FOR.h_1 _ v _ =>
-      rewrite[‹(τ x).head! = Int.ofNat v›] at ‹Int.ofNat (σ x) = (τ x).head!›
-      injection ‹Int.ofNat (σ x) = Int.ofNat v›
-      rewrite[‹σ x = v›]
-      induction v with
-      | zero =>
-        repeat rewrite[Function.iterate_zero_apply]
-        assumption
-      | succ v' ih => sorry
-    case FOR.h_2 _ v _ =>
-      rewrite[‹(τ x).head! = Int.negSucc v›] at ‹Int.ofNat (σ x) = (τ x).head!›
-      contradiction
+     apply ih₂
+     apply ih₁
+     assumption
+  | FOR x LQ ih₁ =>
+    rewrite[LOOP.eval, L2S, SCORE.eval]
+    simp[←(‹σ =ₛ τ› x)]
+    induction (σ x) generalizing σ τ with
+    | zero =>
+      simp
+      assumption
+    | succ m ih₂ =>
+      simp
+      apply ih₂
+      apply ih₁
+      assumption
   | ASN x y => sorry
 end L2S
 
