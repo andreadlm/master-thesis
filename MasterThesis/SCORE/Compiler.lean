@@ -23,51 +23,72 @@ def L2S (Lc : LOOP.com) : SCORE.com :=
 
 namespace L2S
 
-def eqStores (σ : LOOP.store) (τ : SCORE.store) : Prop :=
+def eq_stores (σ : LOOP.store) (τ : SCORE.store) : Prop :=
   ∀ (x : ident), Int.ofNat (σ x) = (τ x).head!
 
-infix:100 "=ₛ" => eqStores
+infix:100 "=ₛ" => eq_stores
 
-theorem soundness (LP : LOOP.com) (σ : LOOP.store) (τ : SCORE.store) : σ =ₛ τ → (LOOP.eval LP σ) =ₛ (SCORE.eval (L2S LP) τ) := by
+lemma eq_stores_update {σ : LOOP.store} {τ : SCORE.store} : ∀ (x : ident) (v : Nat), σ =ₛ τ → ([x ↦ v]σ) =ₛ ([x ↦ (Int.ofNat v) :: τ x]τ) := by
+  intros x v _ y
+  cases eq_or_ne x y with
+  | inl /- x = y -/ =>
+    rewrite[SCORE.store.update_same ‹x = y›,
+            LOOP.store.update_same ‹x = y›,
+            List.head!]
+    simp
+  | inr /- x ≠ y -/ =>
+    rewrite[SCORE.store.update_other ‹x ≠ y›,
+            LOOP.store.update_other ‹x ≠ y›]
+    apply ‹σ =ₛ τ›
+
+theorem soundness {σ : LOOP.store} {τ : SCORE.store} (LP : LOOP.com) : σ =ₛ τ → (LOOP.eval LP σ) =ₛ (SCORE.eval (L2S LP) τ) := by
   intro eqStores
-  induction LP generalizing σ τ <;> rewrite[LOOP.eval, L2S, SCORE.eval]
-  case SKIP => assumption
-  case ZER x =>
+  induction LP generalizing σ τ with
+  | SKIP =>
+    rewrite[LOOP.eval, L2S, SCORE.eval]
+    exact ‹σ =ₛ τ›
+  | ZER x =>
     intro y
+    rewrite[LOOP.eval, L2S, SCORE.eval]
     cases eq_or_ne x y with
-    | inl =>
-      rewrite[List.head!]
-      simp[store.update_same ‹x = y›]
-      rewrite[LOOP.store.update_same ‹x = y›]
-      rfl
-    | inr =>
-      rewrite[store.update_other ‹x ≠ y›, LOOP.store.update_other ‹x ≠ y›]
-      apply ‹σ =ₛ τ› y
-  case INC x =>
+    | inl /- x = y -/ =>
+      simp[List.head!, store.update_same ‹x = y›, LOOP.store.update_same ‹x = y›]
+    | inr /- x ≠ y -/ =>
+      simp[store.update_other ‹x ≠ y›, LOOP.store.update_other ‹x ≠ y›]
+      exact ‹σ =ₛ τ› y
+  | ASN x y =>
+    rewrite[LOOP.eval, L2S]; repeat rewrite[SCORE.eval]
+    cases eq_or_ne x y with
+    | inl /- x = y -/ =>
+      sorry
+    | inr /- x ≠ y -/ =>
+      simp[store.update_other ‹x ≠ y›, ←‹σ =ₛ τ› y]
+      induction (σ y) generalizing σ τ with
+      | zero =>
+        simp
+        exact eq_stores_update x 0 ‹σ=ₛτ›
+      | succ m ih₂ => sorry
+  | INC x =>
     intro y
+    rewrite[LOOP.eval, L2S, SCORE.eval]
     cases eq_or_ne x y with
-    | inl =>
-      rewrite[List.head!]
-      simp[store.update_same ‹x = y›]
-      rewrite[LOOP.store.update_same ‹x = y›]
-      simp -- Chiamata esplicita?
-      apply ‹σ =ₛ τ› x
-    | inr =>
+    | inl /- x = y-/ =>
+      simp[List.head!, store.update_same ‹x = y›, LOOP.store.update_same ‹x = y›]
+      exact ‹σ =ₛ τ› x
+    | inr /- x ≠ y -/ =>
       rewrite[store.update_other ‹x ≠ y›, LOOP.store.update_other ‹x ≠ y›]
-      apply ‹σ =ₛ τ› y
-  case SEQ LQ LR ih₁ ih₂ =>
-     apply ih₂
-     apply ih₁
-     assumption
-  case FOR x LQ ih₁ =>
-    simp[←(‹σ =ₛ τ› x)]
-    induction (σ x) generalizing σ τ <;> simp
-    case zero => assumption
-    case succ m ih₂ =>
-      apply ih₂
-      apply ih₁
-      assumption
-  case ASN x y => sorry
+      exact ‹σ =ₛ τ› y
+  | SEQ LQ LR ih₁ ih₂ =>
+    rewrite[LOOP.eval, L2S, SCORE.eval]
+    exact ih₂ (ih₁ ‹σ =ₛ τ›)
+  | FOR x LQ ih₁ =>
+    simp[LOOP.eval, L2S, SCORE.eval, ←(‹σ =ₛ τ› x)]
+    induction (σ x) generalizing σ τ with
+    | zero =>
+      simp
+      exact ‹σ =ₛ τ›
+    | succ m ih₂ =>
+      exact ih₂ (ih₁ ‹σ =ₛ τ›)
 end L2S
 
 end SCORE
