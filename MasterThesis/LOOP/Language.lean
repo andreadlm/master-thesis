@@ -16,17 +16,23 @@ def update (x : ident) (v : Nat) (s : store) : store :=
 notation "[" x " ↦ " v "]" s => update x v s -- Migliorare?
 notation "[" x " ↦ " v "]"   => [x ↦ v] emp -- Migliorare?
 
-theorem update_same {s : store} {x y : ident} {v : Nat} : x = y → (store.update x v s) y = v := by
+lemma update_same {s : store} {x y : ident} {v : Nat} : x = y → (store.update x v s) y = v := by
   intros
   unfold update
   apply if_pos
   assumption
 
-theorem update_other {s : store} {x y : ident} {v : Nat} : x ≠ y → (store.update x v s) y = (s y) := by
+lemma update_other {s : store} {x y : ident} {v : Nat} : x ≠ y → (store.update x v s) y = (s y) := by
   intros
   unfold update
   apply if_neg
   assumption
+
+lemma update_no_update {s : store} {x : ident} : (update x (s x) s) = s := by
+  funext y
+  cases eq_or_ne x y with
+  | inl /- x = y -/ => rw[update_same ‹x = y›, ‹x = y›]
+  | inr /- x ≠ y -/ => rw[update_other ‹x ≠ y›]
 
 end store
 
