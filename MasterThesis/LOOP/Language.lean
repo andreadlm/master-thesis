@@ -16,12 +16,14 @@ def update (x : ident) (v : Nat) (s : store) : store :=
 notation "[" x " ↦ " v "]" s => update x v s -- Migliorare?
 notation "[" x " ↦ " v "]"   => [x ↦ v] emp -- Migliorare?
 
+@[simp]
 lemma update_same {s : store} {x y : ident} {v : Nat} : x = y → (store.update x v s) y = v := by
   intros
   unfold update
   apply if_pos
   assumption
 
+@[simp]
 lemma update_other {s : store} {x y : ident} {v : Nat} : x ≠ y → (store.update x v s) y = (s y) := by
   intros
   unfold update
