@@ -29,53 +29,54 @@ def eq_stores (σ : LOOP.store) (τ : SCORE.store) : Prop :=
 
 infix:100 "=ₛ" => eq_stores
 
-lemma eq_stores_update {σ : LOOP.store} {τ : SCORE.store} : ∀ (x : ident) (v : Nat), σ =ₛ τ → ([x ↦ v]σ) =ₛ ([x ↦ (Int.ofNat v) :: τ x]τ) := by
+lemma eq_stores_update {σ : LOOP.store} {τ : SCORE.store} : ∀ (x : ident) (v : ℕ), σ =ₛ τ → ([x ↦ v]σ) =ₛ ([x ↦ (Int.ofNat v) :: τ x]τ) := by
   intros x v _ y
   cases eq_or_ne x y with
   | inl /- x = y -/ => simp[List.head!, ‹x = y›]
   | inr /- x ≠ y -/ => simp[‹x ≠ y›]; exact ‹σ =ₛ τ› y
 
+lemma eq_stores_INC {σ : LOOP.store} {τ : SCORE.store} {x : ident} {v : ℕ}: ([x ↦ v]σ) =ₛ τ →  ([x ↦ v + 1]σ) =ₛ SCORE.eval (INC x) τ := by
+  intros _ y
+  cases eq_or_ne x y with
+  | inl /- x = y -/ => -- Migliorare
+    simp only [SCORE.eval, ←‹x = y›, ←(‹([x ↦ v]σ) =ₛ τ› x)]
+    simp [List.head!]
+  | inr /- x ≠ y -/ => have := ‹([x ↦ v]σ) =ₛ τ› y; simpa [SCORE.eval, ‹x ≠ y›]
+
+
 theorem soundness {σ : LOOP.store} {τ : SCORE.store} (LP : LOOP.com) : σ =ₛ τ → (LOOP.eval LP σ) =ₛ (SCORE.eval (L2S LP) τ) := by
   intro
   induction LP generalizing σ τ with
-  | SKIP => simp only [LOOP.eval, L2S, SCORE.eval]; exact ‹σ =ₛ τ›
+  | SKIP => simpa only [LOOP.eval, L2S, SCORE.eval]
   | ZER x =>
-    intro y
     simp only [LOOP.eval, L2S, SCORE.eval]
+    intro y
     cases eq_or_ne x y with
-    | inl /- x = y -/ => simp[List.head!, ‹x = y›]
-    | inr /- x ≠ y -/ => simp[‹x ≠ y›, ‹σ =ₛ τ› y]; exact ‹σ =ₛ τ› y
+    | inl /- x = y -/ => simp [List.head!, ‹x = y›]
+    | inr /- x ≠ y -/ => have := ‹σ =ₛ τ› y; simpa [‹x ≠ y›, ‹σ =ₛ τ› y]
   | ASN x y =>
     simp only [LOOP.eval, L2S, SCORE.eval]
     cases eq_or_ne x y with
-    | inl /- x = y -/ => simp[List.head!, ‹x = y›, SCORE.eval, LOOP.store.update_no_update]; exact ‹σ =ₛ τ›
-    | inr /- x ≠ y -/ =>
-      simp[‹x ≠ y›]
-      rewrite[SCORE.eval]
-      rewrite[SCORE.eval]
-      rewrite[SCORE.eval]
-      simp[‹x ≠ y›, ←(‹σ =ₛ τ› y)]
+    | inl /- x = y -/ => simpa [List.head!, SCORE.eval, LOOP.store.update_no_update, ‹x = y›]
+    | inr /- x ≠ y -/ => -- Migliorare
+      simp [‹x ≠ y›]
+      repeat rewrite [SCORE.eval]
+      simp [‹x ≠ y›, ←(‹σ =ₛ τ› y)]
       induction (σ y) generalizing σ τ with
-      | zero => simp; exact eq_stores_update x 0 ‹σ=ₛτ›
-      | succ m ih =>
-        simp[Nat.add_comm m 1]
-        rewrite[Function.iterate_add_apply]
-        repeat rewrite[←SCORE.eval]
-        rewrite[Function.iterate_one]
-        have := ih ‹σ =ₛ τ›
-        sorry
+      | zero      => have := eq_stores_update x 0 ‹σ=ₛτ›; simpa
+      | succ m ih => have := eq_stores_INC (ih ‹σ =ₛ τ›); simpa [Nat.add_comm m 1, Function.iterate_add_apply]
   | INC x =>
     simp only [LOOP.eval, L2S, SCORE.eval]
     intro y
     cases eq_or_ne x y with
-    | inl /- x = y -/ => simp[List.head!, ‹x = y›]; exact ‹σ =ₛ τ› y
-    | inr /- x ≠ y -/ => simp[‹x ≠ y›]; exact ‹σ =ₛ τ› y
-  | SEQ LQ LR ih₁ ih₂ => simp only [LOOP.eval, L2S, SCORE.eval]; exact ih₂ (ih₁ ‹σ =ₛ τ›)
+    | inl /- x = y -/ => have := ‹σ =ₛ τ› y; simpa [List.head!, ‹x = y›]
+    | inr /- x ≠ y -/ => have := ‹σ =ₛ τ› y; simpa [‹x ≠ y›]
+  | SEQ LQ LR ih₁ ih₂ => have := ih₂ (ih₁ ‹σ =ₛ τ›); simpa only [LOOP.eval, L2S, SCORE.eval]
   | FOR x LQ ih₁ =>
-    simp[LOOP.eval, L2S, SCORE.eval, ←(‹σ =ₛ τ› x)]
+    simp only [LOOP.eval, L2S, SCORE.eval, ←(‹σ =ₛ τ› x)]
     induction (σ x) generalizing σ τ with
-    | zero       => simp; exact ‹σ =ₛ τ›
-    | succ m ih₂ => exact ih₂ (ih₁ ‹σ =ₛ τ›)
+    | zero       => have := ‹σ =ₛ τ›; simpa
+    | succ _ ih₂ => exact ih₂ (ih₁ ‹σ =ₛ τ›)
 end L2S
 
 end SCORE
