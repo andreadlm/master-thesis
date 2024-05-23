@@ -13,8 +13,8 @@ def emp : store := fun _ => []
 def update (x : ident) (l : List Int) (s : store) : store :=
   fun (y : ident) => if x = y then l else (s y)
 
-notation "[" x " ↦ " l "]" s => update x l s -- Migliorare?
-notation "[" x " ↦ " l "]"   => [x ↦ l] emp -- Migliorare?
+notation:100 "[" x:100 " ↦ " l:100 "]" s:100 => update x l s -- Migliorare?
+notation:100 "[" x:100 " ↦ " l:100 "]"      => [x ↦ l] emp -- Migliorare?
 
 #eval (["z" ↦ [3]] ["y" ↦ [2]] ["x" ↦ [1]]) "x"
 

@@ -13,8 +13,8 @@ def emp : store := fun _ => 0
 def update (x : ident) (v : Nat) (s : store) : store :=
   fun (y : ident) => if x = y then v else (s y)
 
-notation "[" x " ↦ " v "]" s => update x v s -- Migliorare?
-notation "[" x " ↦ " v "]"   => [x ↦ v] emp -- Migliorare?
+notation:100 "[" x:100 " ↦ " v:100 "]" s:100 => update x v s -- Migliorare?
+notation:100 "[" x:100 " ↦ " v:100 "]"       => [x ↦ v] emp -- Migliorare?
 
 @[simp]
 lemma update_same {s : store} {x y : ident} {v : Nat} : x = y → (store.update x v s) y = v := by

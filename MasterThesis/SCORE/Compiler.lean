@@ -27,22 +27,22 @@ namespace L2S
 def eq_stores (σ : LOOP.store) (τ : SCORE.store) : Prop :=
   ∀ (x : ident), Int.ofNat (σ x) = (τ x).head!
 
-infix:100 "=ₛ" => eq_stores
+infix:50 "=ₛ" => eq_stores
 
-lemma eq_stores_update {σ : LOOP.store} {τ : SCORE.store} : ∀ (x : ident) (v : ℕ), σ =ₛ τ → ([x ↦ v]σ) =ₛ ([x ↦ (Int.ofNat v) :: τ x]τ) := by
+lemma eq_stores_update {σ : LOOP.store} {τ : SCORE.store} : ∀ (x : ident) (v : ℕ), σ =ₛ τ → [x ↦ v]σ =ₛ [x ↦ (↑v :: τ x)]τ := by
   intros x v _ y
   cases eq_or_ne x y with
-  | inl /- x = y -/ => simp[List.head!, ‹x = y›]
-  | inr /- x ≠ y -/ => simp[‹x ≠ y›]; exact ‹σ =ₛ τ› y
+  | inl /- x = y -/ => simp [List.head!, ‹x = y›]
+  | inr /- x ≠ y -/ => have := ‹σ =ₛ τ› y; simpa [‹x ≠ y›]
 
-lemma eq_stores_INC {σ : LOOP.store} {τ : SCORE.store} {x : ident} {v : ℕ}: ([x ↦ v]σ) =ₛ τ →  ([x ↦ v + 1]σ) =ₛ SCORE.eval (INC x) τ := by
+lemma eq_stores_INC {σ : LOOP.store} {τ : SCORE.store} {x : ident} {v : ℕ}: [x ↦ v]σ =ₛ τ → [x ↦ (v + 1)]σ =ₛ SCORE.eval (INC x) τ := by
   intros _ y
   cases eq_or_ne x y with
-  | inl /- x = y -/ => -- Migliorare
-    simp only [SCORE.eval, ←‹x = y›, ←(‹([x ↦ v]σ) =ₛ τ› x)]
-    simp [List.head!]
-  | inr /- x ≠ y -/ => have := ‹([x ↦ v]σ) =ₛ τ› y; simpa [SCORE.eval, ‹x ≠ y›]
-
+  | inl /- x = y -/ =>
+    have : v = (τ x).head! := by
+      have := ‹[x ↦ v]σ =ₛ τ› x; simpa [‹x = y›]
+    simp [List.head!, SCORE.eval, ‹x = y›, ‹v = (τ x).head!›]
+  | inr /- x ≠ y -/ => have := ‹[x ↦ v]σ =ₛ τ› y; simpa [SCORE.eval, ‹x ≠ y›]
 
 theorem soundness {σ : LOOP.store} {τ : SCORE.store} (LP : LOOP.com) : σ =ₛ τ → (LOOP.eval LP σ) =ₛ (SCORE.eval (L2S LP) τ) := by
   intro
@@ -53,7 +53,7 @@ theorem soundness {σ : LOOP.store} {τ : SCORE.store} (LP : LOOP.com) : σ =ₛ
     intro y
     cases eq_or_ne x y with
     | inl /- x = y -/ => simp [List.head!, ‹x = y›]
-    | inr /- x ≠ y -/ => have := ‹σ =ₛ τ› y; simpa [‹x ≠ y›, ‹σ =ₛ τ› y]
+    | inr /- x ≠ y -/ => have := ‹σ =ₛ τ› y; simpa [‹x ≠ y›]
   | ASN x y =>
     simp only [LOOP.eval, L2S, SCORE.eval]
     cases eq_or_ne x y with
@@ -64,7 +64,7 @@ theorem soundness {σ : LOOP.store} {τ : SCORE.store} (LP : LOOP.com) : σ =ₛ
       simp [‹x ≠ y›, ←(‹σ =ₛ τ› y)]
       induction (σ y) generalizing σ τ with
       | zero      => have := eq_stores_update x 0 ‹σ=ₛτ›; simpa
-      | succ m ih => have := eq_stores_INC (ih ‹σ =ₛ τ›); simpa [Nat.add_comm m 1, Function.iterate_add_apply]
+      | succ m ih => have := eq_stores_INC (ih ‹σ =ₛ τ›); simpa only [Nat.add_comm m 1, Function.iterate_add_apply]
   | INC x =>
     simp only [LOOP.eval, L2S, SCORE.eval]
     intro y
