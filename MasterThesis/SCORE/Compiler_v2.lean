@@ -27,22 +27,34 @@ lemma inc_iter {x : ident} {σ: SCORE.store} {k : Int} (v : ℕ) : (σ x).head! 
   intros
   induction v generalizing σ with
   | zero      =>
-    have : (fun τ ↦ eval (INC x) τ)^[0] σ = σ := by simp
-    have : (k + Int.ofNat 0) = k := by simp
-    rw [‹(fun τ ↦ eval (INC x) τ)^[0] σ = σ›, ‹(k + Int.ofNat 0) = k›]
+    have : (fun τ ↦ eval (INC x) τ)^[0] σ = σ := by
+      { simp }; rw [this]
+    have : (k + Int.ofNat 0) = k := by
+      { simp }; rw [this]
     apply SCORE.store.update_unchanged_cons ‹(σ x).head! = k›
   | succ m ih =>
     have : (fun τ ↦ eval (INC x) τ)^[m + 1] σ = eval (INC x) ((fun τ ↦ eval (INC x) τ)^[m] σ) := by
-      simp [Nat.add_comm m 1, Function.iterate_add_apply]
-    rw [this, ih ‹(σ x).head! = k›, SCORE.eval]
-    simp [List.head!] -- TODO: mettere a posto
+      { simp [Nat.add_comm m 1, Function.iterate_add_apply] }; rw[this]
+    rw [ih ‹(σ x).head! = k›, SCORE.eval, SCORE.store.update_shrink]
+    have : (([x ↦ ((k + Int.ofNat m) :: (σ x).tail!)]σ) x).head! = (k + Int.ofNat m) := by
+      { simp [List.head!] }; rw [this]
+    have : (([x ↦ ((k + Int.ofNat m) :: (σ x).tail!)]σ) x).tail! = (σ x).tail! := by
+      { simp }; rw [this]
     funext y
     cases eq_or_ne x y with
     | inl =>
-      rewrite [← ‹x = y›]
-      simp
-      linarith
-    | inr => simp [‹x ≠ y›]
+      rw [← ‹x = y›]
+      have : ([x ↦ ((k + Int.ofNat m + 1) :: (σ x).tail!)]σ) x = ((k + Int.ofNat m + 1) :: (σ x).tail!) := by
+        { simp }; rw [this]
+      have : ([x ↦ ((k + Int.ofNat (m + 1)) :: (σ x).tail!)]σ) x = ((k + (Int.ofNat m + 1)) :: (σ x).tail!) := by
+        { simp }; rw [this]
+      have : (k + Int.ofNat m + 1) = (k + (Int.ofNat m + 1)) := by
+        { linarith }; rw [this]
+    | inr =>
+      have : ([x ↦ ((k + Int.ofNat m + 1) :: (σ x).tail!)]σ) y = σ y := by
+        { simp [‹x ≠ y›] }; rw [this]
+      have : ([x ↦ ((k + Int.ofNat (m + 1)) :: (σ x).tail!)]σ) y = σ y := by
+        { simp [‹x ≠ y›] }; rw [this]
 
 lemma inc_iter_inv {x : ident} {σ: SCORE.store} {k : Int} (v : ℕ) : (σ x).head! = k → (fun τ ↦ evalI (INC x) τ)^[v] σ = [x ↦ ((k + Int.negSucc (v - 1)) :: (σ x).tail!)]σ := sorry
 
