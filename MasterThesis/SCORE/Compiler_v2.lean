@@ -63,12 +63,12 @@ lemma for_inc {x y : ident} {v₁ v₂ : Int} {τ : SCORE.store} : (τ x).head! 
   rw [SCORE.eval]
   split
   case h_1 v _ /- (τ y).head! >= 0 -/ =>
-    have : v₂ = Int.ofNat v := sorry
-    rw [‹v₂ = Int.ofNat v›]
+    have : v₂ = Int.ofNat v := by
+      { rw [← ‹(τ y).head! = v₂›, ‹(τ y).head! = Int.ofNat v›] }; rw [this]
     apply inc_iter v ‹(τ x).head! = v₁›
   case h_2 u _ /- (τ y).head! < 0  -/ =>
-    have : v₂ = Int.negSucc u := sorry
-    rw [‹v₂ = Int.negSucc u›]
+    have : v₂ = Int.negSucc u := by
+      { rw [← ‹(τ y).head! = v₂›, ‹(τ y).head! = Int.negSucc u›] }; rw [this]
     apply inc_iter_inv u.succ ‹(τ x).head! = v₁›
 
 lemma for_dec (x y : ident) (v₁ v₂ : Int) (τ : SCORE.store) : (τ x).head! = v₁ → (τ y).head! = v₂ → eval (FOR y (DEC x)) τ = [x ↦ ((v₁ - v₂) :: (τ x).tail!)]τ := sorry
