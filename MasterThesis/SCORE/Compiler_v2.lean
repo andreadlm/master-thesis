@@ -84,7 +84,7 @@ lemma for_inc {x y : ident} {v₁ v₂ : Int} {τ : SCORE.store} : (τ x).head! 
       { simp [Int.negSucc_coe]; linarith }; rw [this]
     exact iter_dec u.succ ‹(τ x).head! = v₁›
 
-lemma for_dec (x y : ident) (v₁ v₂ : Int) (τ : SCORE.store) : (τ x).head! = v₁ → (τ y).head! = v₂ → eval (FOR y (DEC x)) τ = [x ↦ ((v₁ - v₂) :: (τ x).tail!)]τ := by
+lemma for_dec {x y : ident} {v₁ v₂ : Int} {τ : SCORE.store} : (τ x).head! = v₁ → (τ y).head! = v₂ → eval (FOR y (DEC x)) τ = [x ↦ ((v₁ - v₂) :: (τ x).tail!)]τ := by
   intros
   rw [SCORE.eval]
   split
@@ -101,28 +101,37 @@ lemma for_dec (x y : ident) (v₁ v₂ : Int) (τ : SCORE.store) : (τ x).head! 
     exact iter_inc u.succ ‹(τ x).head! = v₁›
 
 
-lemma evaluation_invariant (x y ev : ident) (τ : SCORE.store) : x ≠ ev → y ≠ ev → (τ x).head! = v₁ → (τ y).head! = v₂ → (τ ev).head! = v₃ → (τ ev) = ((eval (L2S' ev (LOOP.com.ASN x y)) τ) ev) := by
+theorem ev_invariant {x y ev : ident} {τ : SCORE.store} : x ≠ ev → y ≠ ev → (τ x).head! = v₁ → (τ y).head! = v₂ → (τ ev).head! = 0 → (τ ev) = ((eval (L2S' ev (LOOP.com.ASN x y)) τ) ev) := by
   intros
-  rewrite [L2S']
-  rewrite [eval]
-  rewrite [eval]
-  rewrite [eval]
-  rewrite [for_inc ‹(τ ev).head! = v₃› ‹(τ y).head! = v₂›]
-  rewrite [eval]
-  rewrite [SCORE.store.update_other]
-  have h1 : (([x ↦ (0 :: τ x)][ev ↦ ((v₃ + v₂) :: (τ ev).tail!)]τ) x).head! = 0 := sorry
-  have h2 : (([x ↦ (0 :: τ x)][ev ↦ ((v₃ + v₂) :: (τ ev).tail!)]τ) ev).head! = (v₃ + v₂) := sorry
-  rewrite [for_inc h1 h2]
-  simp
-  have h3 : (([x ↦ ((v₃ + v₂) :: τ x)][x ↦ (0 :: τ x)][ev ↦ ((v₃ + v₂) :: (τ ev).tail!)]τ) ev).head! = (v₃ + v₂) := sorry
-  have h4 : (([x ↦ ((v₃ + v₂) :: τ x)][x ↦ (0 :: τ x)][ev ↦ ((v₃ + v₂) :: (τ ev).tail!)]τ) x).head! = (v₃ + v₂) := sorry
-  rewrite [for_dec ev x (v₃ + v₂) (v₃ + v₂) ([x ↦ ((v₃ + v₂) :: τ x)][x ↦ (0 :: τ x)][ev ↦ ((v₃ + v₂) :: (τ ev).tail!)]τ) h3 h4]
-  simp
-  sorry
+  rw [L2S', eval, eval, eval]
+  rw [for_inc ‹(τ ev).head! = 0› ‹(τ y).head! = v₂›, zero_add]
+  rw [eval]
+  have : ([ev ↦ (v₂ :: (τ ev).tail!)]τ) x = τ x := by
+    { simp [‹x ≠ ev›.symm] }; rw [this]
+  have head_x : (([x ↦ (0 :: τ x)][ev ↦ (v₂ :: (τ ev).tail!)]τ) x).head! = 0 := by
+    sorry
+  have head_ev : (([x ↦ (0 :: τ x)][ev ↦ (v₂ :: (τ ev).tail!)]τ) ev).head! = v₂ := by
+    sorry
+  rw [for_inc head_x head_ev, zero_add]
+  have : (([x ↦ (0 :: τ x)][ev ↦ (v₂ :: (τ ev).tail!)]τ) x).tail! = τ x := by
+    { simp }; rw [this]
+  rw [SCORE.store.update_shrink]
+  have head_x : (([x ↦ (v₂ :: τ x)][ev ↦ (v₂ :: (τ ev).tail!)]τ) x).head! = v₂ := by
+    sorry
+  have head_ev : (([x ↦ (v₂ :: τ x)][ev ↦ (v₂ :: (τ ev).tail!)]τ) ev).head! = v₂ := by
+    sorry
+  rw [for_dec head_ev head_x, sub_self]
+  have : (([x ↦ (v₂ :: τ x)][ev ↦ (v₂ :: (τ ev).tail!)]τ) ev).tail! = (τ ev).tail! := by
+    { sorry }; rw [this]
+  have : ([ev ↦ (0 :: (τ ev).tail!)][x ↦ (v₂ :: τ x)][ev ↦ (v₂ :: (τ ev).tail!)]τ) ev = 0 :: (τ ev).tail! := by
+    { simp }; rw [this]
   sorry
 
-lemma evaluation_zero (x y ev : ident) (τ : SCORE.store) : (τ ev).head! = 0 → ((eval (L2S' ev (LOOP.com.ASN x y)) τ) ev).head! = 0 := by
-  sorry -- intro; simpa only [← evaluation_invariant x y ev τ]
+lemma ev_zero {x y ev : ident} {τ : SCORE.store} : x ≠ ev → y ≠ ev → (τ x).head! = v₁ → (τ y).head! = v₂ → (τ ev).head! = 0 → ((eval (L2S' ev (LOOP.com.ASN x y)) τ) ev).head! = 0 := by
+  intros
+  have : τ ev = (eval (L2S' ev (LOOP.com.ASN x y)) τ) ev := by
+    { exact ev_invariant ‹x ≠ ev› ‹y ≠ ev› ‹(τ x).head! = v₁› ‹(τ y).head! = v₂› ‹(τ ev).head! = 0› }; rw [← this]
+  assumption
 
 end L2S'
 
