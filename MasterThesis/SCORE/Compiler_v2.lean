@@ -109,22 +109,24 @@ theorem ev_invariant {x y ev : ident} {τ : SCORE.store} : x ≠ ev → y ≠ ev
   have : ([ev ↦ (v₂ :: (τ ev).tail!)]τ) x = τ x := by
     { simp [‹x ≠ ev›.symm] }; rw [this]
   have head_x : (([x ↦ (0 :: τ x)][ev ↦ (v₂ :: (τ ev).tail!)]τ) x).head! = 0 := by
-    sorry
+    simp [List.head!]
   have head_ev : (([x ↦ (0 :: τ x)][ev ↦ (v₂ :: (τ ev).tail!)]τ) ev).head! = v₂ := by
-    sorry
+    simp [‹x ≠ ev›, List.head!]
   rw [for_inc head_x head_ev, zero_add]
   have : (([x ↦ (0 :: τ x)][ev ↦ (v₂ :: (τ ev).tail!)]τ) x).tail! = τ x := by
     { simp }; rw [this]
   rw [SCORE.store.update_shrink]
   have head_x : (([x ↦ (v₂ :: τ x)][ev ↦ (v₂ :: (τ ev).tail!)]τ) x).head! = v₂ := by
-    sorry
+    simp [List.head!]
   have head_ev : (([x ↦ (v₂ :: τ x)][ev ↦ (v₂ :: (τ ev).tail!)]τ) ev).head! = v₂ := by
-    sorry
+    simp [‹x ≠ ev›, List.head!]
   rw [for_dec head_ev head_x, sub_self]
   have : (([x ↦ (v₂ :: τ x)][ev ↦ (v₂ :: (τ ev).tail!)]τ) ev).tail! = (τ ev).tail! := by
-    { sorry }; rw [this]
+    { simp [‹x ≠ ev›] }; rw [this]
   have : ([ev ↦ (0 :: (τ ev).tail!)][x ↦ (v₂ :: τ x)][ev ↦ (v₂ :: (τ ev).tail!)]τ) ev = 0 :: (τ ev).tail! := by
     { simp }; rw [this]
+  have : τ ev ≠ [] := sorry
+  rewrite (config := {occs := .pos [1]}) [← List.cons_head!_tail ‹τ ev ≠ []›]
   sorry
 
 lemma ev_zero {x y ev : ident} {τ : SCORE.store} : x ≠ ev → y ≠ ev → (τ x).head! = v₁ → (τ y).head! = v₂ → (τ ev).head! = 0 → ((eval (L2S' ev (LOOP.com.ASN x y)) τ) ev).head! = 0 := by
