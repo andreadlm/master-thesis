@@ -38,11 +38,11 @@ lemma update_unchanged {s : store} {x : ident} : s = store.update x (s x) s := b
   | inl /- x = y -/ => rewrite [‹x = y›]; simp only [update_same]
   | inr /- x ≠ y -/ => simp only [update_other ‹x ≠ y›]
 
-lemma update_unchanged_cons {s : store} {x : ident} {v : Int} : (s x).head! = v → s = store.update x (v :: (s x).tail!) s := by
+lemma update_unchanged_cons {s : store} {x : ident} {v : Int} : (s x).head? = some v → s = store.update x (v :: (s x).tail) s := by
   intro
-  have : (v :: (s x).tail!) = (s x) := by
+  have : (v :: (s x).tail) = (s x) := by
     sorry
-  simp only [‹(v :: (s x).tail!) = (s x)›]
+  simp only [‹(v :: (s x).tail) = (s x)›]
   apply update_unchanged
 
 end store

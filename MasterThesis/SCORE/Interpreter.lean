@@ -12,27 +12,39 @@ mutual
     | CON x   => [x ↦ (0 :: (τ x))] τ
     | NOC x   => match τ x with
                  | 0 :: t => [x ↦ t] τ
-                 | _      => τ -- CHECK: error?
-    | DEC x   => [x ↦ (((τ x).head! - 1) :: (τ x).tail!)] τ
-    | INC x   => [x ↦ (((τ x).head! + 1) :: (τ x).tail!)] τ
+                 | _      => τ -- TODO: error state
+    | DEC x   => match (τ x).head? with
+                 | some v => [x ↦ ((v - 1) :: (τ x).tail)] τ
+                 | none   => τ
+    | INC x   => match (τ x).head? with
+                 | some v => [x ↦ ((v + 1) :: (τ x).tail)] τ
+                 | none   => τ -- TODO: error state
     | SEQ P Q => (eval Q) (eval P τ)
-    | FOR x P => match (τ x).head! with
-                 | Int.ofNat   v => (fun τ'  => eval P τ')^[v] τ
-                 | Int.negSucc v => (fun τ' => evalI P τ')^[v.succ] τ
+    | FOR x P => match (τ x).head? with
+                 | some v => match v with
+                             | Int.ofNat   k => (fun τ' => eval P τ' )^[k] τ
+                             | Int.negSucc k => (fun τ' => evalI P τ')^[k.succ] τ
+                 | none   => τ -- TODO: error state
 
   def evalI (P : com) (τ : store) : store :=
     match P with
     | SKIP    => τ
     | CON x   => match τ x with
                  | 0 :: t => [x ↦ t] τ
-                 | _      => τ -- CHECK: error?
+                 | _      => τ -- TODO: error state
     | NOC x   => [x ↦ (0 :: (τ x))] τ
-    | DEC x   => [x ↦ (((τ x).head! + 1) :: (τ x).tail!)] τ
-    | INC x   => [x ↦ (((τ x).head! - 1) :: (τ x).tail!)] τ
+    | DEC x   =>  match (τ x).head? with
+                 | some v => [x ↦ ((v + 1) :: (τ x).tail)] τ
+                 | none   => τ -- TODO: error state
+    | INC x   => match (τ x).head? with
+                 | some v => [x ↦ ((v + 1) :: (τ x).tail)] τ
+                 | none   => τ -- TODO: error state
     | SEQ P Q => (evalI Q) (evalI P τ)
-    | FOR x P => match (τ x).head! with
-                 | Int.ofNat   v => (fun τ' => evalI P τ')^[v] τ
-                 | Int.negSucc v => (fun τ' => eval P τ')^[v.succ] τ
+    | FOR x P => match (τ x).head? with
+                 | some v => match v with
+                             | Int.ofNat   k => (fun τ' => evalI P τ')^[k] τ
+                             | Int.negSucc k => (fun τ' => eval P τ' )^[k.succ] τ
+                 | none   => τ -- TODO: error state
 end
 
 theorem inv_evalI (P : com) (τ : store) : eval (inv P) τ = evalI P τ := sorry
