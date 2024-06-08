@@ -23,15 +23,26 @@ def L2S (Lc : LOOP.com) : SCORE.com :=
 namespace L2S
 
 def eq_stores (σ : LOOP.store) (τ : SCORE.store) : Prop :=
-  ∀ (x : ident), Int.ofNat (σ x) = (τ x).head!
+  ∀ (x : ident), (some (Int.ofNat (σ x)) = (τ x).head?)
 
 infix:50 "=ₛ" => eq_stores
 
-lemma eq_stores_update {σ : LOOP.store} {τ : SCORE.store} (x : ident) (v : ℕ) : σ =ₛ τ → [x ↦ v]σ =ₛ [x ↦ (↑v :: τ x)]τ := by
+lemma eq_stores_update {σ : LOOP.store} {τ : SCORE.store} (x : ident) (v : ℕ) : σ =ₛ τ → [x ↦ v]σ =ₛ [x ↦ (Int.ofNat v :: τ x)]τ := by
   intros _ y
   cases eq_or_ne x y with
-  | inl /- x = y -/ => simp [List.head!, ‹x = y›]
-  | inr /- x ≠ y -/ => have := ‹σ =ₛ τ› y; simpa [‹x ≠ y›]
+  | inl /- x = y -/ =>
+    have : ([x ↦ (Int.ofNat v :: τ x)]τ) y = Int.ofNat v :: τ x := by
+      { simp [‹x = y›] }; rw [this]
+    have : ([x ↦ v]σ) y = v := by
+      { simp [‹x = y›] }; rw [this]
+    have : (Int.ofNat v :: τ x).head? = Int.ofNat v := by
+      { simp }; rw [this]
+  | inr /- x ≠ y -/ =>
+    have : ([x ↦ v]σ) y = σ y := by
+      { simp [‹x ≠ y›] }; rw [this]
+    have : ([x ↦ (Int.ofNat v :: τ x)]τ) y = τ y := by
+      { simp [‹x ≠ y›] }; rw [this]
+    exact ‹σ=ₛτ› y
 
 lemma eq_stores_INC {σ : LOOP.store} {τ : SCORE.store} {x : ident} {v : ℕ}: [x ↦ v]σ =ₛ τ → [x ↦ (v + 1)]σ =ₛ SCORE.eval (INC x) τ := by
   intros _ y
