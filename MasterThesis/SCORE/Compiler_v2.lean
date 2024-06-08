@@ -122,7 +122,8 @@ lemma for_dec {x y : ident} {v₁ v₂ : Int} {τ : SCORE.store} : (τ x).head? 
         }; rw [this]
       have : v₁ - Int.negSucc k = v₁ + Int.ofNat k.succ := by
         { simp [Int.negSucc_coe]
-          linarith }; rw [this]
+          linarith
+        }; rw [this]
       exact iter_inc k.succ ‹(τ x).head? = some v₁›
   case h_2     /- (τ y).head? = none -/   =>
     rw [‹(τ y).head? = some v₂›] at ‹(τ y).head? = none›
