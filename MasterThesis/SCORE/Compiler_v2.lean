@@ -32,7 +32,7 @@ lemma eval_inc_dec_evalI {x : ident} {σ : SCORE.store} : eval (INC x) σ = eval
 
 -- TODO: sostituire con un teorema più generale sulla reversibilità?
 lemma eval_dec_inc_evalI {x : ident} {σ : SCORE.store} : eval (DEC x) σ = evalI (INC x) σ := by
-  sorry -- rw [SCORE.eval, SCORE.evalI]
+  rw [SCORE.eval, SCORE.evalI]
 
 lemma iter_inc {x : ident} {σ : SCORE.store} {k : Int} (v : ℕ) : (σ x).head? = some k → (fun τ ↦ eval (INC x) τ)^[v] σ = [x ↦ ((k + Int.ofNat v) :: (σ x).tail)]σ := by
   intros

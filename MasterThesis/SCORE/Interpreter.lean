@@ -37,7 +37,7 @@ mutual
                  | some v => [x ↦ ((v + 1) :: (τ x).tail)] τ
                  | none   => τ -- TODO: error state
     | INC x   => match (τ x).head? with
-                 | some v => [x ↦ ((v + 1) :: (τ x).tail)] τ
+                 | some v => [x ↦ ((v - 1) :: (τ x).tail)] τ
                  | none   => τ -- TODO: error state
     | SEQ P Q => (evalI Q) (evalI P τ)
     | FOR x P => match (τ x).head? with
