@@ -2,6 +2,7 @@ import MasterThesis.SCORE.Language
 import MasterThesis.SCORE.Interpreter
 import MasterThesis.LOOP.Language
 import MasterThesis.LOOP.Interpreter
+import Mathlib.Tactic.Linarith
 
 namespace SCORE
 
@@ -44,14 +45,43 @@ lemma eq_stores_update {σ : LOOP.store} {τ : SCORE.store} (x : ident) (v : ℕ
       { simp [‹x ≠ y›] }; rw [this]
     exact ‹σ=ₛτ› y
 
+/-
+rw [← ‹[x ↦ v]σ =ₛ τ› x]
+        have : ([x ↦ v]σ) x = v := by
+          { simp }; rw [this]
+-/
+
 lemma eq_stores_INC {σ : LOOP.store} {τ : SCORE.store} {x : ident} {v : ℕ}: [x ↦ v]σ =ₛ τ → [x ↦ (v + 1)]σ =ₛ SCORE.eval (INC x) τ := by
   intros _ y
   cases eq_or_ne x y with
   | inl /- x = y -/ =>
-    have : v = (τ x).head! := by
-      have := ‹[x ↦ v]σ =ₛ τ› x; simpa [‹x = y›]
-    simp [List.head!, SCORE.eval, ‹x = y›, ‹v = (τ x).head!›]
-  | inr /- x ≠ y -/ => have := ‹[x ↦ v]σ =ₛ τ› y; simpa [SCORE.eval, ‹x ≠ y›]
+    rw [SCORE.eval]
+    have : ([x ↦ (v + 1)]σ) y = (v + 1) := by
+      { simp [‹x = y›] }; rw [this]
+    have : (τ x).head? = some (Int.ofNat v) := by
+      { rw [← ‹[x ↦ v]σ =ₛ τ› x]
+        have : ([x ↦ v]σ) x = v := by
+          { simp }; rw [this]
+      }; simp only [this]
+    have : ([x ↦ ((Int.ofNat v + 1) :: (τ x).tail)]τ) y = ((Int.ofNat v + 1) :: (τ x).tail) := by
+      { simp [‹x = y›] }; rw [this]
+    have : Int.ofNat (v + 1) = Int.ofNat v + 1 := by
+      { simp }; rw [this]
+    rw [List.head?_cons]
+  | inr /- x ≠ y -/ =>
+    rw [SCORE.eval]
+    have : ([x ↦ (v + 1)]σ) y = σ y := by
+      { simp [‹x ≠ y›] }; rw [this]
+    have : (τ x).head? = some (Int.ofNat v) := by
+      { rw [← ‹[x ↦ v]σ =ₛ τ› x]
+        have : ([x ↦ v]σ) x = v := by
+          { simp }; rw [this]
+      }; simp only [this]
+    have : ([x ↦ ((Int.ofNat v + 1) :: (τ x).tail)]τ) y = τ y := by
+      { simp [‹x ≠ y›] }; rw [this]
+    rw [← ‹[x ↦ v]σ =ₛ τ› y]
+    have : ([x ↦ v]σ) y = σ y := by
+      { simp [‹x ≠ y›] }; rw [this]
 
 theorem soundness {σ : LOOP.store} {τ : SCORE.store} (LP : LOOP.com) : σ =ₛ τ → (LOOP.eval LP σ) =ₛ (SCORE.eval (L2S LP) τ) := by
   intro
