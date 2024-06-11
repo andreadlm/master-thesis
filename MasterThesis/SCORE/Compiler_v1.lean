@@ -95,7 +95,7 @@ theorem soundness {σ : LOOP.store} {τ : SCORE.store} (LP : LOOP.com) : σ =ₛ
       have : some (Int.ofNat 0) = some 0 := by
         { simp }; rw [this]
       rw [List.head?_cons]
-    | inr /- x ≠ y -/ => -- have := ‹σ =ₛ τ› y; simpa [‹x ≠ y›]
+    | inr /- x ≠ y -/ =>
       have : ([x ↦ 0]σ) y = σ y := by
         { simp [‹x ≠ y›] }; rw [this]
       have : ([x ↦ (0 :: τ x)]τ) y = τ y := by
@@ -152,7 +152,7 @@ theorem soundness {σ : LOOP.store} {τ : SCORE.store} (LP : LOOP.com) : σ =ₛ
     rw [LOOP.eval, L2S, SCORE.eval]
     simp only [← ‹σ =ₛ τ› x]
     induction (σ x) generalizing σ τ with
-    | zero       => -- have := ‹σ =ₛ τ›; simpa
+    | zero       =>
       have : (fun σ' ↦ LOOP.eval LQ σ')^[0] σ = σ := by
         { simp }; rw [this];
       have : (fun τ' ↦ eval (L2S LQ) τ')^[0] τ = τ := by
