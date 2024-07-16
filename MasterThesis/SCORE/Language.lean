@@ -45,16 +45,18 @@ lemma update_unchanged_cons {s : store} {x : ident} {v : Int} : (s x).head? = so
 end store
 
 inductive state : Type :=
-| progress : store → state
+| prog : store → state
 | fail
+
+notation "⊥" => state.fail
 
 namespace state
 
 -- TODO: mettere a posto
 def getStore (s : state) : store :=
   match s with
-  | progress σ => σ
-  | fail => store.emp
+  | prog σ => σ
+  | fail   => store.emp
 
 end state
 
@@ -81,6 +83,8 @@ def inv (P : com) : com :=
   | INC x   => DEC x
   | SEQ Q R => SEQ (inv R) (inv Q)
   | FOR x Q => FOR x (inv Q)
+
+postfix:max "⁻¹" => inv
 
 theorem inv_inv (P : com) : (inv (inv P)) = P := by
   induction  P

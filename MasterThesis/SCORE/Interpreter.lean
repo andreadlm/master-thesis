@@ -11,18 +11,18 @@ mutual
   def eval (P : com) (s : state) : state :=
     match s with
     | fail       => fail
-    | progress σ =>
+    | prog σ =>
       match P with
       | SKIP    => s
-      | CON x   => progress ([x ↦ (0 :: (σ x))] σ)
+      | CON x   => prog ([x ↦ (0 :: (σ x))] σ)
       | NOC x   => match (σ x).head? with
-                   | some 0 => progress ([x ↦ (σ x).tail] σ)
+                   | some 0 => prog ([x ↦ (σ x).tail] σ)
                    | _      => fail
       | DEC x   => match (σ x).head? with
-                   | some v => progress ([x ↦ ((v - 1) :: (σ x).tail)] σ)
+                   | some v => prog ([x ↦ ((v - 1) :: (σ x).tail)] σ)
                    | none   => fail
       | INC x   => match (σ x).head? with
-                   | some v => progress ([x ↦ ((v + 1) :: (σ x).tail)] σ)
+                   | some v => prog ([x ↦ ((v + 1) :: (σ x).tail)] σ)
                    | none   => fail
       | SEQ P Q => (eval Q) (eval P s)
       | FOR x P => match (σ x).head? with
@@ -33,18 +33,18 @@ mutual
   def evalI (P : com) (s : state) : state :=
     match s with
     | fail       => fail
-    | progress σ =>
+    | prog σ =>
       match P with
       | SKIP    => s
       | CON x   => match (σ x).head? with
-                   | some 0 => progress ([x ↦ (σ x).tail] σ)
+                   | some 0 => prog ([x ↦ (σ x).tail] σ)
                    | _   => fail
-      | NOC x   => progress ([x ↦ (0 :: (σ x))] σ)
+      | NOC x   => prog ([x ↦ (0 :: (σ x))] σ)
       | DEC x   => match (σ x).head? with
-                   | some v => progress ([x ↦ ((v + 1) :: (σ x).tail)] σ)
+                   | some v => prog ([x ↦ ((v + 1) :: (σ x).tail)] σ)
                    | none   => fail
       | INC x   => match (σ x).head? with
-                   | some v => progress ([x ↦ ((v - 1) :: (σ x).tail)] σ)
+                   | some v => prog ([x ↦ ((v - 1) :: (σ x).tail)] σ)
                    | none   => fail
       | SEQ P Q => (evalI Q) (evalI P s)
       | FOR x P => match (σ x).head? with
