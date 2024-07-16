@@ -11,10 +11,15 @@ lemma SKIP_inv_SKIP {p q : state} : (eval SKIP p) = q ∧ q ≠ ⊥ ↔ (eval SK
     have ⟨_, _⟩ := ‹eval SKIP p = q ∧ q ≠ ⊥›
     match p with
     | prog σ =>
-      rw [eval] at ‹eval SKIP (prog σ) = q›
       constructor
-      case left  => rw [← ‹prog σ = q›, inv, eval]
-      case right => rwa [‹prog σ = q›]
+      case left  =>
+        rw [eval] at ‹eval SKIP (prog σ) = q›
+        rw [← ‹prog σ = q›, inv, eval]
+      case right =>
+        by_contra
+        simp only [‹prog σ = ⊥›, eval] at ‹eval SKIP (prog σ) = q›
+        symm at ‹⊥ = q›
+        contradiction
     | ⊥      =>
       rw [eval] at ‹eval SKIP ⊥ = q›
       symm at ‹⊥ = q›
@@ -24,11 +29,70 @@ lemma SKIP_inv_SKIP {p q : state} : (eval SKIP p) = q ∧ q ≠ ⊥ ↔ (eval SK
     have ⟨_, _⟩ := ‹eval SKIP⁻¹ q = p ∧ p ≠ ⊥›
     match q with
       | prog σ =>
-        rw [inv, eval] at ‹eval SKIP⁻¹ (prog σ) = p›
         constructor
-        case left  => rw [← ‹prog σ = p›, eval]
-        case right => rwa [‹prog σ = p›]
+        case left  =>
+          rw [inv, eval] at ‹eval SKIP⁻¹ (prog σ) = p›
+          rw [← ‹prog σ = p›, eval]
+        case right =>
+          by_contra
+          simp only [‹prog σ = ⊥›, eval] at ‹eval SKIP (prog σ) = p›
+          symm at ‹⊥ = p›
+          contradiction
       | ⊥      =>
         rw [inv, eval] at ‹eval SKIP⁻¹ ⊥ = p›
         symm at ‹⊥ = p›
         contradiction
+
+lemma CON_inv_CON {p q : state} {x : ident} : (eval (CON x) p) = q ∧ q ≠ ⊥ ↔ (eval (CON x)⁻¹ q) = p ∧ p ≠ ⊥ := by
+  constructor
+  case mp  =>
+    intro
+    have ⟨_, _⟩ := ‹eval (CON x) p = q ∧ q ≠ ⊥›
+    clear ‹eval (CON x) p = q ∧ q ≠ ⊥›
+    match p with
+    | prog σ =>
+      constructor
+      case left  =>
+        rw [eval] at ‹eval (CON x) (prog σ) = q›
+        rw [← ‹prog ([x ↦ (0 :: σ x)] σ) = q›, inv, eval]
+        have : ([x ↦ (0 :: σ x)] σ) x = (0 :: σ x) := by
+          { simp }; rw [this]
+        have : (0 :: σ x).head? = some 0 := by
+          { simp }; simp only [this]
+        have : (0 :: σ x).tail = σ x := by
+          { simp }; rw [this]
+        rw [update_shrink, ← update_unchanged]
+      case right =>
+        by_contra
+        simp only [‹prog σ = ⊥›, eval] at ‹eval (CON x) (prog σ) = q›
+        symm at ‹⊥ = q›
+        contradiction
+    | ⊥      =>
+      rw [eval] at ‹eval (CON x) ⊥ = q›
+      symm at ‹⊥ = q›
+      contradiction
+  case mpr =>
+    intro
+    have ⟨lh, _⟩ := ‹eval (CON x)⁻¹ q = p ∧ p ≠ ⊥›
+    clear ‹eval (CON x)⁻¹ q = p ∧ p ≠ ⊥›
+    match q with
+    | prog σ =>
+      constructor
+      case left  =>
+        rw [inv, eval] at ‹eval (CON x)⁻¹ (prog σ) = p›
+        split at lh
+        case h_1 =>
+          rw [← ‹prog ([x ↦ (σ x).tail]σ) = p›, eval]
+          sorry
+        case h_2 =>
+          symm at ‹⊥ = p›
+          contradiction
+      case right =>
+        by_contra
+        simp only [‹prog σ = ⊥›, eval] at ‹eval (CON x)⁻¹ (prog σ) = p›
+        symm at ‹⊥ = p›
+        contradiction
+    | ⊥      =>
+      rw [inv, eval] at ‹eval (CON x)⁻¹ ⊥ = p›
+      symm at ‹⊥ = p›
+      contradiction
