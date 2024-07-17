@@ -4,7 +4,7 @@ import MasterThesis.SCORE.Interpreter
 
 open SCORE SCORE.com SCORE.store SCORE.state
 
-lemma SKIP_inv_SKIP {p q : state} : (eval SKIP p) = q ∧ q ≠ ⊥ ↔ (eval SKIP⁻¹ q) = p ∧ p ≠ ⊥ := by
+lemma inv_SKIP {p q : state} : (eval SKIP p) = q ∧ q ≠ ⊥ ↔ (eval SKIP⁻¹ q) = p ∧ p ≠ ⊥ := by
   constructor
   case mp  =>
     intro
@@ -43,7 +43,7 @@ lemma SKIP_inv_SKIP {p q : state} : (eval SKIP p) = q ∧ q ≠ ⊥ ↔ (eval SK
         symm at ‹⊥ = p›
         contradiction
 
-lemma CON_inv_CON {p q : state} {x : ident} : (eval (CON x) p) = q ∧ q ≠ ⊥ ↔ (eval (CON x)⁻¹ q) = p ∧ p ≠ ⊥ := by
+lemma inv_CON {p q : state} {x : ident} : (eval (CON x) p) = q ∧ q ≠ ⊥ ↔ (eval (CON x)⁻¹ q) = p ∧ p ≠ ⊥ := by
   constructor
   case mp  =>
     intro
@@ -99,3 +99,9 @@ lemma CON_inv_CON {p q : state} {x : ident} : (eval (CON x) p) = q ∧ q ≠ ⊥
       rw [inv, eval] at ‹eval (CON x)⁻¹ ⊥ = p›
       symm at ‹⊥ = p›
       contradiction
+
+lemma inv_NOC {p q : state} {x : ident} : (eval (NOC x) p) = q ∧ q ≠ ⊥ ↔ (eval (NOC x)⁻¹ q) = p ∧ p ≠ ⊥ := by
+  have : (NOC x) = (CON x)⁻¹ := by
+    { rw [inv] }; rw [this]
+  rw [inv]
+  exact inv_CON.symm
