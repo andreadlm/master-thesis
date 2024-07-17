@@ -52,6 +52,11 @@ notation "⊥" => state.fail
 
 namespace state
 
+lemma prog_or_bot (s : state) : (∃ (τ : store), s = prog τ) ∨ s = fail := by
+  cases s
+  case prog σ => left; exact ⟨σ, rfl⟩
+  case fail   => right; rfl
+
 -- TODO: mettere a posto
 def getStore (s : state) : store :=
   match s with

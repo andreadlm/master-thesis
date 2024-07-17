@@ -4,57 +4,57 @@ import MasterThesis.SCORE.Interpreter
 
 open SCORE SCORE.com SCORE.store SCORE.state
 
-lemma inv_SKIP {p q : state} : (eval SKIP p) = q ∧ q ≠ ⊥ ↔ (eval SKIP⁻¹ q) = p ∧ p ≠ ⊥ := by
+lemma invertible_SKIP {s t : state} : (eval SKIP s) = t ∧ t ≠ ⊥ ↔ (eval SKIP⁻¹ t) = s ∧ s ≠ ⊥ := by
   constructor
   case mp  =>
     intro
-    have ⟨_, _⟩ := ‹eval SKIP p = q ∧ q ≠ ⊥›
-    match p with
+    have ⟨_, _⟩ := ‹eval SKIP s = t ∧ t ≠ ⊥›
+    match s with
     | prog σ =>
       constructor
       case left  =>
-        rw [eval] at ‹eval SKIP (prog σ) = q›
-        rw [← ‹prog σ = q›, inv, eval]
+        rw [eval] at ‹eval SKIP (prog σ) = t›
+        rw [← ‹prog σ = t›, inv, eval]
       case right =>
         by_contra
-        simp only [‹prog σ = ⊥›, eval] at ‹eval SKIP (prog σ) = q›
-        symm at ‹⊥ = q›
+        simp only [‹prog σ = ⊥›, eval] at ‹eval SKIP (prog σ) = t›
+        symm at ‹⊥ = t›
         contradiction
     | ⊥      =>
-      rw [eval] at ‹eval SKIP ⊥ = q›
-      symm at ‹⊥ = q›
+      rw [eval] at ‹eval SKIP ⊥ = t›
+      symm at ‹⊥ = t›
       contradiction
   case mpr =>
     intro
-    have ⟨_, _⟩ := ‹eval SKIP⁻¹ q = p ∧ p ≠ ⊥›
-    match q with
+    have ⟨_, _⟩ := ‹eval SKIP⁻¹ t = s ∧ s ≠ ⊥›
+    match t with
       | prog σ =>
         constructor
         case left  =>
-          rw [inv, eval] at ‹eval SKIP⁻¹ (prog σ) = p›
-          rw [← ‹prog σ = p›, eval]
+          rw [inv, eval] at ‹eval SKIP⁻¹ (prog σ) = s›
+          rw [← ‹prog σ = s›, eval]
         case right =>
           by_contra
-          simp only [‹prog σ = ⊥›, eval] at ‹eval SKIP (prog σ) = p›
-          symm at ‹⊥ = p›
+          simp only [‹prog σ = ⊥›, eval] at ‹eval SKIP (prog σ) = s›
+          symm at ‹⊥ = s›
           contradiction
       | ⊥      =>
-        rw [inv, eval] at ‹eval SKIP⁻¹ ⊥ = p›
-        symm at ‹⊥ = p›
+        rw [inv, eval] at ‹eval SKIP⁻¹ ⊥ = s›
+        symm at ‹⊥ = s›
         contradiction
 
-lemma inv_CON {p q : state} {x : ident} : (eval (CON x) p) = q ∧ q ≠ ⊥ ↔ (eval (CON x)⁻¹ q) = p ∧ p ≠ ⊥ := by
+lemma invertible_CON {s t : state} {x : ident} : (eval (CON x) s) = t ∧ t ≠ ⊥ ↔ (eval (CON x)⁻¹ t) = s ∧ s ≠ ⊥ := by
   constructor
   case mp  =>
     intro
-    have ⟨_, _⟩ := ‹eval (CON x) p = q ∧ q ≠ ⊥›
-    clear ‹eval (CON x) p = q ∧ q ≠ ⊥›
-    match p with
+    have ⟨_, _⟩ := ‹eval (CON x) s = t ∧ t ≠ ⊥›
+    clear ‹eval (CON x) s = t ∧ t ≠ ⊥›
+    match s with
     | prog σ =>
       constructor
       case left  =>
-        rw [eval] at ‹eval (CON x) (prog σ) = q›
-        rw [← ‹prog ([x ↦ (0 :: σ x)] σ) = q›, inv, eval]
+        rw [eval] at ‹eval (CON x) (prog σ) = t›
+        rw [← ‹prog ([x ↦ (0 :: σ x)] σ) = t›, inv, eval]
         have : ([x ↦ (0 :: σ x)] σ) x = (0 :: σ x) := by
           { simp }; rw [this]
         have : (0 :: σ x).head? = some 0 := by
@@ -64,62 +64,62 @@ lemma inv_CON {p q : state} {x : ident} : (eval (CON x) p) = q ∧ q ≠ ⊥ ↔
         rw [update_shrink, update_unchanged]
       case right =>
         by_contra
-        simp only [‹prog σ = ⊥›, eval] at ‹eval (CON x) (prog σ) = q›
-        symm at ‹⊥ = q›
+        simp only [‹prog σ = ⊥›, eval] at ‹eval (CON x) (prog σ) = t›
+        symm at ‹⊥ = t›
         contradiction
     | ⊥      =>
-      rw [eval] at ‹eval (CON x) ⊥ = q›
-      symm at ‹⊥ = q›
+      rw [eval] at ‹eval (CON x) ⊥ = t›
+      symm at ‹⊥ = t›
       contradiction
   case mpr =>
     intro
-    have ⟨lh, _⟩ := ‹eval (CON x)⁻¹ q = p ∧ p ≠ ⊥›
-    clear ‹eval (CON x)⁻¹ q = p ∧ p ≠ ⊥›
-    match q with
+    have ⟨lh, _⟩ := ‹eval (CON x)⁻¹ t = s ∧ s ≠ ⊥›
+    clear ‹eval (CON x)⁻¹ t = s ∧ s ≠ ⊥›
+    match t with
     | prog σ =>
       constructor
       case left  =>
-        rw [inv, eval] at ‹eval (CON x)⁻¹ (prog σ) = p›
+        rw [inv, eval] at ‹eval (CON x)⁻¹ (prog σ) = s›
         split at lh
         case h_1 =>
-          rw [← ‹prog ([x ↦ (σ x).tail]σ) = p›, eval]
+          rw [← ‹prog ([x ↦ (σ x).tail]σ) = s›, eval]
           have : ([x ↦ (σ x).tail] σ) x = (σ x).tail := by
             { simp }; rw [this]
           rw [update_shrink]
           rw [update_unchanged_cons ‹(σ x).head? = some 0›]
         case h_2 =>
-          symm at ‹⊥ = p›
+          symm at ‹⊥ = s›
           contradiction
       case right =>
         by_contra
-        simp only [‹prog σ = ⊥›, eval] at ‹eval (CON x)⁻¹ (prog σ) = p›
-        symm at ‹⊥ = p›
+        simp only [‹prog σ = ⊥›, eval] at ‹eval (CON x)⁻¹ (prog σ) = s›
+        symm at ‹⊥ = s›
         contradiction
     | ⊥      =>
-      rw [inv, eval] at ‹eval (CON x)⁻¹ ⊥ = p›
-      symm at ‹⊥ = p›
+      rw [inv, eval] at ‹eval (CON x)⁻¹ ⊥ = s›
+      symm at ‹⊥ = s›
       contradiction
 
-lemma inv_NOC {p q : state} {x : ident} : (eval (NOC x) p) = q ∧ q ≠ ⊥ ↔ (eval (NOC x)⁻¹ q) = p ∧ p ≠ ⊥ := by
+lemma invertible_NOC {s t : state} {x : ident} : (eval (NOC x) s) = t ∧ t ≠ ⊥ ↔ (eval (NOC x)⁻¹ t) = s ∧ s ≠ ⊥ := by
   have : (NOC x) = (CON x)⁻¹ := by
     { rw [inv] }; rw [this]
   rw [inv]
-  exact inv_CON.symm
+  exact invertible_CON.symm
 
-lemma inv_DEC {p q : state} {x : ident} : (eval (DEC x) p) = q ∧ q ≠ ⊥ ↔ (eval (DEC x)⁻¹ q) = p ∧ p ≠ ⊥ := by
+lemma invertible_DEC {s t : state} {x : ident} : (eval (DEC x) s) = t ∧ t ≠ ⊥ ↔ (eval (DEC x)⁻¹ t) = s ∧ s ≠ ⊥ := by
   constructor
   case mp  =>
     intro
-    have ⟨lh, _⟩ := ‹eval (DEC x) p = q ∧ q ≠ ⊥›
-    clear ‹eval (DEC x) p = q ∧ q ≠ ⊥›
-    match p with
+    have ⟨lh, _⟩ := ‹eval (DEC x) s = t ∧ t ≠ ⊥›
+    clear ‹eval (DEC x) s = t ∧ t ≠ ⊥›
+    match s with
     | prog σ =>
       constructor
       case left =>
-        rw [eval] at ‹eval (DEC x) (prog σ) = q›
+        rw [eval] at ‹eval (DEC x) (prog σ) = t›
         split at lh
         case h_1 v _ =>
-          rw [← ‹prog ([x ↦ ((v - 1) :: (σ x).tail)]σ) = q›, inv, eval]
+          rw [← ‹prog ([x ↦ ((v - 1) :: (σ x).tail)]σ) = t›, inv, eval]
           have : ([x ↦ ((v - 1) :: (σ x).tail)] σ) x = (v - 1) :: (σ x).tail := by
             { simp }; rw [this]
           have : ((v - 1) :: (σ x).tail).head? = some (v - 1) := by
@@ -131,29 +131,29 @@ lemma inv_DEC {p q : state} {x : ident} : (eval (DEC x) p) = q ∧ q ≠ ⊥ ↔
             { rw [List.tail_cons] }; rw [this]
           rw [update_unchanged_cons ‹(σ x).head? = some v›]
         case h_2 =>
-          symm at ‹⊥ = q›
+          symm at ‹⊥ = t›
           contradiction
       case right =>
         by_contra
-        simp only [‹prog σ = ⊥›, eval] at ‹eval (DEC x) (prog σ) = q›
-        symm at ‹⊥ = q›
+        simp only [‹prog σ = ⊥›, eval] at ‹eval (DEC x) (prog σ) = t›
+        symm at ‹⊥ = t›
         contradiction
     | ⊥      =>
-      rw [eval] at ‹eval (DEC x) ⊥ = q›
-      symm at ‹⊥ = q›
+      rw [eval] at ‹eval (DEC x) ⊥ = t›
+      symm at ‹⊥ = t›
       contradiction
   case mpr =>
     intro
-    have ⟨lh, _⟩ := ‹eval (DEC x)⁻¹ q = p ∧ p ≠ ⊥›
-    clear ‹eval (DEC x)⁻¹ q = p ∧ p ≠ ⊥›
-    match q with
+    have ⟨lh, _⟩ := ‹eval (DEC x)⁻¹ t = s ∧ s ≠ ⊥›
+    clear ‹eval (DEC x)⁻¹ t = s ∧ s ≠ ⊥›
+    match t with
     | prog σ =>
       constructor
       case left =>
-        rw [inv, eval] at ‹eval (DEC x)⁻¹ (prog σ) = p›
+        rw [inv, eval] at ‹eval (DEC x)⁻¹ (prog σ) = s›
         split at lh
         case h_1 v _ =>
-          rw [← ‹prog ([x ↦ ((v + 1) :: (σ x).tail)]σ) = p›, eval]
+          rw [← ‹prog ([x ↦ ((v + 1) :: (σ x).tail)]σ) = s›, eval]
           have : ([x ↦ ((v + 1) :: (σ x).tail)] σ) x = (v + 1) :: (σ x).tail := by
             { simp }; rw [this]
           have : ((v + 1) :: (σ x).tail).head? = some (v + 1) := by
@@ -165,20 +165,46 @@ lemma inv_DEC {p q : state} {x : ident} : (eval (DEC x) p) = q ∧ q ≠ ⊥ ↔
             { rw [List.tail_cons] }; rw [this]
           rw [update_unchanged_cons ‹(σ x).head? = some v›]
         case h_2 =>
-          symm at ‹⊥ = p›
+          symm at ‹⊥ = s›
           contradiction
       case right =>
         by_contra
-        simp only [‹prog σ = ⊥›, inv, eval] at ‹eval (DEC x)⁻¹ (prog σ) = p›
-        symm at ‹⊥ = p›
+        simp only [‹prog σ = ⊥›, inv, eval] at ‹eval (DEC x)⁻¹ (prog σ) = s›
+        symm at ‹⊥ = s›
         contradiction
     | ⊥ =>
-      rw [inv, eval] at ‹eval (DEC x)⁻¹ ⊥ = p›
-      symm at ‹⊥ = p›
+      rw [inv, eval] at ‹eval (DEC x)⁻¹ ⊥ = s›
+      symm at ‹⊥ = s›
       contradiction
 
-lemma inv_INC {p q : state} {x : ident} : (eval (INC x) p) = q ∧ q ≠ ⊥ ↔ (eval (INC x)⁻¹ q) = p ∧ p ≠ ⊥ := by
+lemma invertible_INC {s t : state} {x : ident} : (eval (INC x) s) = t ∧ t ≠ ⊥ ↔ (eval (INC x)⁻¹ t) = s ∧ s ≠ ⊥ := by
   have : (INC x) = (DEC x)⁻¹ := by
     { rw [inv] }; rw [this]
   rw [inv]
-  exact inv_DEC.symm
+  exact invertible_DEC.symm
+
+lemma invertible_SEQ {s t : state} {P Q : com} (h₁ : ∀ {s t : state}, eval P s = t ∧ t ≠ ⊥ ↔ eval P⁻¹ t = s ∧ s ≠ ⊥) (ih₂ : ∀ {s t : state}, eval Q s = t ∧ t ≠ ⊥ ↔ eval Q⁻¹ t = s ∧ s ≠ ⊥) : (eval (SEQ P Q) s) = t ∧ t ≠ ⊥ ↔ (eval (SEQ P Q)⁻¹ t) = s ∧ s ≠ ⊥ := by
+  constructor
+  case mp =>
+    intro
+    have ⟨_, _⟩ := ‹eval (SEQ P Q) s = t ∧ t ≠ ⊥›
+    clear ‹eval (SEQ P Q) s = t ∧ t ≠ ⊥›
+    match s with
+    | prog σ =>
+      constructor
+      case left  => sorry
+      case right => sorry
+    | ⊥      =>
+      sorry
+  case mpr =>
+    sorry
+
+theorem invertible {s t : state} {P : com} : (eval P s) = t ∧ t ≠ ⊥ ↔ (eval P⁻¹ t) = s ∧ s ≠ ⊥ := by
+  induction P generalizing s t
+  case SKIP => sorry
+  case CON => sorry
+  case NOC => sorry
+  case DEC => sorry
+  case INC => sorry
+  case SEQ P Q ih₁ ih₂ => sorry
+  case FOR x P => sorry
