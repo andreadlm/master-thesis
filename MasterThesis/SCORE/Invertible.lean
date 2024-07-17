@@ -61,7 +61,7 @@ lemma CON_inv_CON {p q : state} {x : ident} : (eval (CON x) p) = q ∧ q ≠ ⊥
           { simp }; simp only [this]
         have : (0 :: σ x).tail = σ x := by
           { simp }; rw [this]
-        rw [update_shrink, ← update_unchanged]
+        rw [update_shrink, update_unchanged]
       case right =>
         by_contra
         simp only [‹prog σ = ⊥›, eval] at ‹eval (CON x) (prog σ) = q›
@@ -83,7 +83,10 @@ lemma CON_inv_CON {p q : state} {x : ident} : (eval (CON x) p) = q ∧ q ≠ ⊥
         split at lh
         case h_1 =>
           rw [← ‹prog ([x ↦ (σ x).tail]σ) = p›, eval]
-          sorry
+          have : ([x ↦ (σ x).tail] σ) x = (σ x).tail := by
+            { simp }; rw [this]
+          rw [update_shrink]
+          rw [update_unchanged_cons ‹(σ x).head? = some 0›]
         case h_2 =>
           symm at ‹⊥ = p›
           contradiction
