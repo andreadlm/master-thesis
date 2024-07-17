@@ -33,13 +33,13 @@ lemma update_shrink {σ : store} {x : ident} {l₁ l₂ : List Int} : (store.upd
   | inl /- x = y -/ => simp only [update_same ‹x = y›]
   | inr /- x ≠ y -/ => simp only [update_other ‹x ≠ y›]
 
-lemma update_unchanged {s : store} {x : ident} : s = store.update x (s x) s := by
+lemma update_unchanged {σ : store} {x : ident} : store.update x (σ x) σ = σ := by
   funext y
   cases eq_or_ne x y with
   | inl /- x = y -/ => rewrite [‹x = y›]; simp only [update_same]
   | inr /- x ≠ y -/ => simp only [update_other ‹x ≠ y›]
 
-lemma update_unchanged_cons {s : store} {x : ident} {v : Int} : (s x).head? = some v → s = store.update x (v :: (s x).tail) s := by
+lemma update_unchanged_cons {σ : store} {x : ident} {v : Int} : (σ x).head? = some v → store.update x (v :: (σ x).tail) σ = σ := by
   sorry
 
 end store
