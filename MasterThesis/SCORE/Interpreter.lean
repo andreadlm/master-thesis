@@ -10,7 +10,7 @@ open SCORE.com SCORE.store SCORE.state
 mutual
   def eval (P : com) (s : state) : state :=
     match s with
-    | fail       => fail
+    | fail   => fail
     | prog σ =>
       match P with
       | SKIP    => s
@@ -32,7 +32,7 @@ mutual
                    | none   => fail
   def evalI (P : com) (s : state) : state :=
     match s with
-    | fail       => fail
+    | fail   => fail
     | prog σ =>
       match P with
       | SKIP    => s
