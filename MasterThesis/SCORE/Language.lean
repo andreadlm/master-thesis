@@ -86,7 +86,7 @@ def inv (P : com) : com :=
   | NOC x   => CON x
   | DEC x   => INC x
   | INC x   => DEC x
-  | SEQ Q R => SEQ (inv R) (inv Q)
+  | SEQ P Q => SEQ (inv Q) (inv P)
   | FOR x Q => FOR x (inv Q)
 
 postfix:max "⁻¹" => inv
