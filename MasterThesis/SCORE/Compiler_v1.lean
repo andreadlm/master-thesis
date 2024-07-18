@@ -77,7 +77,29 @@ lemma eq_stores_INC {σ : LOOP.store} {τ : SCORE.store} {x : ident} {v : ℕ}: 
     have : ([x ↦ v]σ) y = σ y := by
       { simp [‹x ≠ y›] }; rw [this]
 
-theorem soundness {σ : LOOP.store} {τ : SCORE.store} (LP : LOOP.com) : σ =ₛ τ → (LOOP.eval LP σ) =ₛ (SCORE.eval (L2S LP) τ) := by
+/- Possibili formalizzazioni alternative con stato
+  1) {σ : LOOP.store} {τ τ' : SCORE.store} (LP : LOOP.com) : σ =ₛ τ → (SCORE.eval (L2S LP) (prog τ)) = (prog τ') → (LOOP.eval LP σ) =ₛ τ'
+  2) {σ : LOOP.store} {τ : SCORE.store} (LP : LOOP.com) : σ =ₛ τ → ∃ (τ' : SCORE.store), (SCORE.eval (L2S LP) (prog τ) = (prog τ')) ∧ (LOOP.eval LP σ) =ₛ τ'
+
+  Delle due, probabilmente la 2) è più forte, perchè dimostra che l'esecuzione di un programma compilato da LOOP non può mail fallire, ovvero il
+  fallimento è una caratteristica dei soli programmi scritti direttamente in SCORE
+
+  Oppure si introduce un tipo induttivo
+
+  inductive LOOP.state : Type :=
+  | prog : LOOP.store → state
+
+  che permette di estendere la definizione sopra
+
+  def eq_states (s : LOOP.state) (t : SCORE.state) : Prop :=
+    match s, t with
+    | prog σ, prog τ => ∀ (x : ident), (some (Int.ofNat (σ x)) = (τ x).head?)
+    | _     , _      => False
+
+  e mantenere sostazialmente invariate le definizioni dei teoremi.
+  Gli altri lemmi seguono dalla scelta fatta per la soundness. -/
+
+theorem soundness {σ : LOOP.store} {τ : SCORE.store} (LP : LOOP.com) : σ =ₛ τ → (LOOP.eval LP σ) =ₛ (SCORE.eval (L2S LP) τ)
   intro
   induction LP generalizing σ τ with
   | SKIP =>
