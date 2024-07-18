@@ -223,10 +223,10 @@ lemma invertible_SEQ {s t : state} {P Q : com} (ih₁ : ∀ {s t : state}, eval 
 
 theorem invertible {s t : state} {P : com} : (eval P s) = t ∧ t ≠ ⊥ ↔ (eval P⁻¹ t) = s ∧ s ≠ ⊥ := by
   induction P generalizing s t
-  case SKIP => sorry
-  case CON => sorry
-  case NOC => sorry
-  case DEC => sorry
-  case INC => sorry
-  case SEQ P Q ih₁ ih₂ => sorry
-  case FOR x P => sorry
+  case SKIP        => exact invertible_SKIP
+  case CON         => exact invertible_CON
+  case NOC         => exact invertible_NOC
+  case DEC         => exact invertible_DEC
+  case INC         => exact invertible_INC
+  case SEQ ih₁ ih₂ => exact invertible_SEQ ih₁ ih₂
+  case FOR x P     => sorry
