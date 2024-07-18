@@ -1,4 +1,5 @@
 import Mathlib.Data.Prod.Basic
+import Mathlib.Data.List.Basic
 
 import MasterThesis.Commons
 
@@ -40,7 +41,19 @@ lemma update_unchanged {σ : store} {x : ident} : store.update x (σ x) σ = σ 
   | inr /- x ≠ y -/ => simp only [update_other ‹x ≠ y›]
 
 lemma update_unchanged_cons {σ : store} {x : ident} {v : Int} : (σ x).head? = some v → store.update x (v :: (σ x).tail) σ = σ := by
-  sorry
+  intro
+  funext y
+  cases eq_or_ne x y with
+  | inl /- x = y-/ =>
+    rw [← ‹x = y›]
+    have : ([x ↦ (v :: (σ x).tail)] σ) x = (v :: (σ x).tail) := by
+      { simp [‹x = y›]}; rw [this]
+    have : v ∈ (σ x).head? := by
+      { rw [Option.mem_def]; assumption }
+    exact List.cons_head?_tail ‹v ∈ (σ x).head?›
+  | inr /- x ≠ y-/ =>
+    have : ([x ↦ (v :: (σ x).tail)] σ) y = σ y := by
+      { simp [‹x ≠ y›] }; rw [this]
 
 end store
 
@@ -51,17 +64,6 @@ inductive state : Type :=
 notation "⊥" => state.fail
 
 namespace state
-
-lemma prog_or_bot (s : state) : (∃ (τ : store), s = prog τ) ∨ s = fail := by
-  cases s
-  case prog σ => left; exact ⟨σ, rfl⟩
-  case fail   => right; rfl
-
--- TODO: mettere a posto
-def getStore (s : state) : store :=
-  match s with
-  | prog σ => σ
-  | fail   => store.emp
 
 end state
 
