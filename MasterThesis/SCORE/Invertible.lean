@@ -230,3 +230,28 @@ theorem invertible {s t : state} {P : com} : (eval P s) = t ∧ t ≠ ⊥ ↔ (e
   case INC         => exact invertible_INC
   case SEQ ih₁ ih₂ => exact invertible_SEQ ih₁ ih₂
   case FOR x P     => sorry
+
+/- Definizione di invertible data per il linguaggio SCORE privo di stati di errore.
+  La condizione è dimostrabile per mezzo di invertible nel caso in cui non si verifichino errori,
+  nel caso di situazioni di errore però non risulta essere adatta. I sorry da dimostrare sono "banali".
+-/
+theorem invertible' {s : state} {P : com} : (eval (P ;; P⁻¹) s) = s := by
+  have : (eval (P ;; P⁻¹) s) = eval P⁻¹ (eval P s) := by
+    { sorry }; rw [this]
+  have := prog_or_bot (eval P s)
+  cases ‹(∃ σ, eval P s = prog σ) ∨ eval P s = ⊥›
+  case inl =>
+    have ⟨σ, _⟩ := ‹∃ σ, eval P s = prog σ›
+    have : prog σ ≠ ⊥ := by sorry
+    have := (invertible.mp ⟨‹eval P s = prog σ›, ‹prog σ ≠ ⊥›⟩).left
+    rw [← ‹eval P s = prog σ›] at ‹eval P⁻¹ (prog σ) = s›
+    assumption
+  case inr =>
+    match s with
+    | prog σ =>
+      rw [‹eval P (prog σ) = ⊥›, eval]
+      sorry -- Impossibile che ⊥ = prog σ
+    | ⊥      =>
+      rw [eval]
+      have : eval P⁻¹ ⊥ = ⊥ := by
+        { sorry }; rw [this]
