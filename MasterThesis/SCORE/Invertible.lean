@@ -196,9 +196,30 @@ lemma invertible_SEQ {s t : state} {P Q : com} (ih₁ : ∀ {s t : state}, eval 
       have ⟨_, _⟩ := ih₂.mp ⟨‹eval Q (eval P (prog σ)) = prog τ›, ‹prog τ ≠ ⊥›⟩
       have : eval Q⁻¹ (prog τ) ≠ ⊥ := Eq.trans_ne ‹eval Q⁻¹ (prog τ) = eval P (prog σ)› ‹eval P (prog σ) ≠ ⊥›
       exact ih₁.mp ⟨‹eval Q⁻¹ (prog τ) = eval P (prog σ)›.symm, ‹eval Q⁻¹ (prog τ) ≠ ⊥›⟩
-    | _, _           => sorry
+    | ⊥     , t      =>
+      rw [eval] at ‹eval (P ;; Q) ⊥ = t›
+      symm at ‹⊥ = t›
+      contradiction
+    | s     , ⊥     =>
+      contradiction
   case mpr =>
-    sorry
+    intro
+    have ⟨_, _⟩ := ‹eval (P ;; Q)⁻¹ t = s ∧ s ≠ ⊥›
+    clear ‹eval (P ;; Q)⁻¹ t = s ∧ s ≠ ⊥›
+    match t, s with
+    | prog τ, prog σ =>
+      rw [eval]
+      rw [inv, eval] at ‹eval (P ;; Q)⁻¹ (prog τ) = prog σ›
+      have ⟨_, _⟩ := ih₁.mpr ⟨‹eval P⁻¹ (eval Q⁻¹ (prog τ)) = prog σ›, ‹prog σ ≠ ⊥›⟩
+      have : eval P (prog σ) ≠ ⊥ := Eq.trans_ne ‹eval P (prog σ) = eval Q⁻¹ (prog τ)› ‹eval Q⁻¹ (prog τ) ≠ ⊥›
+      exact ih₂.mpr ⟨‹eval P (prog σ) = eval Q⁻¹ (prog τ)›.symm, ‹eval P (prog σ) ≠ ⊥›⟩
+    | t     , ⊥      =>
+      contradiction
+    | ⊥     , s      =>
+      rw [inv, eval] at ‹eval (P ;; Q)⁻¹ ⊥ = s›
+      symm at ‹⊥ = s›
+      contradiction
+
 
 theorem invertible {s t : state} {P : com} : (eval P s) = t ∧ t ≠ ⊥ ↔ (eval P⁻¹ t) = s ∧ s ≠ ⊥ := by
   induction P generalizing s t
