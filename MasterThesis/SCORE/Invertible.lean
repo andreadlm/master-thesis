@@ -183,19 +183,20 @@ lemma invertible_INC {s t : state} {x : ident} : (eval (INC x) s) = t ∧ t ≠ 
   rw [inv]
   exact invertible_DEC.symm
 
-lemma invertible_SEQ {s t : state} {P Q : com} (h₁ : ∀ {s t : state}, eval P s = t ∧ t ≠ ⊥ ↔ eval P⁻¹ t = s ∧ s ≠ ⊥) (ih₂ : ∀ {s t : state}, eval Q s = t ∧ t ≠ ⊥ ↔ eval Q⁻¹ t = s ∧ s ≠ ⊥) : (eval (SEQ P Q) s) = t ∧ t ≠ ⊥ ↔ (eval (SEQ P Q)⁻¹ t) = s ∧ s ≠ ⊥ := by
+lemma invertible_SEQ {s t : state} {P Q : com} (ih₁ : ∀ {s t : state}, eval P s = t ∧ t ≠ ⊥ ↔ eval P⁻¹ t = s ∧ s ≠ ⊥) (ih₂ : ∀ {s t : state}, eval Q s = t ∧ t ≠ ⊥ ↔ eval Q⁻¹ t = s ∧ s ≠ ⊥) : (eval (SEQ P Q) s) = t ∧ t ≠ ⊥ ↔ (eval (SEQ P Q)⁻¹ t) = s ∧ s ≠ ⊥ := by
   constructor
   case mp =>
     intro
-    have ⟨_, _⟩ := ‹eval (SEQ P Q) s = t ∧ t ≠ ⊥›
-    clear ‹eval (SEQ P Q) s = t ∧ t ≠ ⊥›
-    match s with
-    | prog σ =>
-      constructor
-      case left  => sorry
-      case right => sorry
-    | ⊥      =>
-      sorry
+    have ⟨_, _⟩ := ‹eval (P ;; Q) s = t ∧ t ≠ ⊥›
+    clear ‹eval (P ;; Q) s = t ∧ t ≠ ⊥›
+    match s, t with
+    | prog σ, prog τ =>
+      rw [inv, eval]
+      rw [eval] at ‹eval (P ;; Q) (prog σ) = prog τ›
+      have ⟨_, _⟩ := ih₂.mp ⟨‹eval Q (eval P (prog σ)) = prog τ›, ‹prog τ ≠ ⊥›⟩
+      have : eval Q⁻¹ (prog τ) ≠ ⊥ := Eq.trans_ne ‹eval Q⁻¹ (prog τ) = eval P (prog σ)› ‹eval P (prog σ) ≠ ⊥›
+      exact ih₁.mp ⟨‹eval Q⁻¹ (prog τ) = eval P (prog σ)›.symm, ‹eval Q⁻¹ (prog τ) ≠ ⊥›⟩
+    | _, _           => sorry
   case mpr =>
     sorry
 
