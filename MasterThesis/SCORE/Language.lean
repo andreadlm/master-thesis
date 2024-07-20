@@ -1,5 +1,6 @@
 import Mathlib.Data.Prod.Basic
 import Mathlib.Data.List.Basic
+import Mathlib.Logic.Function.Iterate
 
 import MasterThesis.Commons
 
@@ -80,11 +81,26 @@ inductive Com : Type
 | INC  : Ident → Com
 | SEQ  : Com → Com → Com
 | FOR  : Ident → Com → Com
-deriving Repr
 
 open Com
 
 infixl:80 ";;" => SEQ
+
+def comToString (indLv : Nat) (P : Com) : String :=
+  let ind : String := (String.append "  ")^[indLv] ""
+  match P with
+  | SKIP    => s!"{ind}SKIP"
+  | CON x   => s!"{ind}CON {x}"
+  | NOC x   => s!"{ind}NOC {x}"
+  | DEC x   => s!"{ind}DEC {x}"
+  | INC x   => s!"{ind}INC {x}"
+  | SEQ P Q => s!"{comToString indLv P};;\n{comToString indLv Q}"
+  | FOR x P => s!"{ind}FOR {x}\n{comToString (indLv + 1) P}"
+
+instance : ToString Com where
+  toString := comToString 0
+
+#eval (SEQ (FOR "x" (SEQ (SEQ (CON "x") (FOR "x" (SEQ (CON "x") (NOC "y")))) (INC "x"))) (DEC "x"))
 
 def inv (P : Com) : Com :=
   match P with
