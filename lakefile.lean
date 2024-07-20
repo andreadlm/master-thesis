@@ -9,7 +9,7 @@ package «master_thesis» where
   -- add any additional package configuration options here
 
 require mathlib from git
-  "https://github.com/leanprover-community/mathlib4.git"
+  "https://github.com/leanprover-community/mathlib4.git" @ "stable"
 
 @[default_target]
 lean_lib «MasterThesis» where
