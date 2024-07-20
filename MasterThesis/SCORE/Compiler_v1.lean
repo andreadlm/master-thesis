@@ -8,7 +8,7 @@ namespace SCORE
 
 open SCORE.Com
 
-def L2S (Lc : LOOP.Com) : SCORE.Com :=
+def l2s (Lc : LOOP.Com) : SCORE.Com :=
   match Lc with
   | LOOP.Com.SKIP    => SKIP
   | LOOP.Com.ZER x   => CON x
@@ -17,11 +17,11 @@ def L2S (Lc : LOOP.Com) : SCORE.Com :=
                           FOR y (INC x)
                         else SKIP
   | LOOP.Com.INC x   => INC x
-  | LOOP.Com.SEQ P Q => L2S P ;;
-                        L2S Q
-  | LOOP.Com.FOR x P => FOR x (L2S P)
+  | LOOP.Com.SEQ P Q => l2s P ;;
+                        l2s Q
+  | LOOP.Com.FOR x P => FOR x (l2s P)
 
-namespace L2S
+namespace l2s
 
 def eq_stores (σ : LOOP.Store) (τ : SCORE.Store) : Prop :=
   ∀ (x : Ident), (some (Int.ofNat (σ x)) = (τ x).head?)
@@ -78,8 +78,8 @@ lemma eq_stores_INC {σ : LOOP.Store} {τ : SCORE.Store} {x : Ident} {v : ℕ}: 
       { simp [‹x ≠ y›] }; rw [this]
 
 /- Possibili formalizzazioni alternative con stato
-  1) {σ : LOOP.Store} {τ τ' : SCORE.Store} (LP : LOOP.Com) : σ =ₛ τ → (SCORE.eval (L2S LP) (prog τ)) = (prog τ') → (LOOP.eval LP σ) =ₛ τ'
-  2) {σ : LOOP.Store} {τ : SCORE.Store} (LP : LOOP.Com) : σ =ₛ τ → ∃ (τ' : SCORE.Store), (SCORE.eval (L2S LP) (prog τ) = (prog τ')) ∧ (LOOP.eval LP σ) =ₛ τ'
+  1) {σ : LOOP.Store} {τ τ' : SCORE.Store} (LP : LOOP.Com) : σ =ₛ τ → (SCORE.eval (l2s LP) (prog τ)) = (prog τ') → (LOOP.eval LP σ) =ₛ τ'
+  2) {σ : LOOP.Store} {τ : SCORE.Store} (LP : LOOP.Com) : σ =ₛ τ → ∃ (τ' : SCORE.Store), (SCORE.eval (l2s LP) (prog τ) = (prog τ')) ∧ (LOOP.eval LP σ) =ₛ τ'
 
   Delle due, probabilmente la 2) è più forte, perchè dimostra che l'esecuzione di un programma compilato da LOOP non può mail fallire, ovvero il
   fallimento è una caratteristica dei soli programmi scritti direttamente in SCORE
@@ -99,14 +99,14 @@ lemma eq_stores_INC {σ : LOOP.Store} {τ : SCORE.Store} {x : Ident} {v : ℕ}: 
   e mantenere sostazialmente invariate le definizioni dei teoremi.
   Gli altri lemmi seguono dalla scelta fatta per la soundness. -/
 
-theorem soundness {σ : LOOP.Store} {τ : SCORE.Store} (LP : LOOP.Com) : σ =ₛ τ → (LOOP.eval LP σ) =ₛ (SCORE.eval (L2S LP) τ)
+theorem soundness {σ : LOOP.Store} {τ : SCORE.Store} (LP : LOOP.Com) : σ =ₛ τ → (LOOP.eval LP σ) =ₛ (SCORE.eval (l2s LP) τ)
   intro
   induction LP generalizing σ τ with
   | SKIP =>
-    rw [LOOP.eval, L2S, SCORE.eval]
+    rw [LOOP.eval, l2s, SCORE.eval]
     assumption
   | ZER x =>
-    rw [LOOP.eval, L2S, SCORE.eval]
+    rw [LOOP.eval, l2s, SCORE.eval]
     intro y
     cases eq_or_ne x y with
     | inl /- x = y -/ =>
@@ -124,7 +124,7 @@ theorem soundness {σ : LOOP.Store} {τ : SCORE.Store} (LP : LOOP.Com) : σ =ₛ
         { simp [‹x ≠ y›] }; rw [this]
       exact ‹σ =ₛ τ› y
   | ASN x y =>
-    rw [LOOP.eval, L2S]
+    rw [LOOP.eval, l2s]
     cases eq_or_ne x y with
     | inl /- x = y -/ =>
       have : (if x ≠ y then (CON x) ;; (FOR y (INC x)) else SKIP) = SKIP := by
@@ -148,7 +148,7 @@ theorem soundness {σ : LOOP.Store} {τ : SCORE.Store} (LP : LOOP.Com) : σ =ₛ
           { simp [Nat.add_comm m 1, Function.iterate_add_apply] }; rw [this]
         exact eq_stores_INC (ih ‹σ =ₛ τ›)
   | INC x =>
-    rw [LOOP.eval, L2S, SCORE.eval]
+    rw [LOOP.eval, l2s, SCORE.eval]
     intro y
     cases eq_or_ne x y with
     | inl /- x = y -/ =>
@@ -168,19 +168,19 @@ theorem soundness {σ : LOOP.Store} {τ : SCORE.Store} (LP : LOOP.Com) : σ =ₛ
         { simp [‹x ≠ y›] }; rw [this]
       exact ‹σ =ₛ τ› y
   | SEQ LQ LR ih₁ ih₂ =>
-    rw [LOOP.eval, L2S, SCORE.eval]
+    rw [LOOP.eval, l2s, SCORE.eval]
     exact ih₂ (ih₁ ‹σ =ₛ τ›)
   | FOR x LQ ih₁ =>
-    rw [LOOP.eval, L2S, SCORE.eval]
+    rw [LOOP.eval, l2s, SCORE.eval]
     simp only [← ‹σ =ₛ τ› x]
     induction (σ x) generalizing σ τ with
     | zero       =>
       have : (fun σ' ↦ LOOP.eval LQ σ')^[0] σ = σ := by
         { simp }; rw [this];
-      have : (fun τ' ↦ eval (L2S LQ) τ')^[0] τ = τ := by
+      have : (fun τ' ↦ eval (l2s LQ) τ')^[0] τ = τ := by
         { simp }; rw [this];
       assumption
     | succ _ ih₂ => exact ih₂ (ih₁ ‹σ =ₛ τ›)
-end L2S
+end l2s
 
 end SCORE

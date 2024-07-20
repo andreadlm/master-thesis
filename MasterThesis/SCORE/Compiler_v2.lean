@@ -9,7 +9,7 @@ namespace SCORE
 
 open SCORE.Com
 
-def L2S' (ev : Ident) (Lc: LOOP.Com) : SCORE.Com :=
+def l2s' (ev : Ident) (Lc: LOOP.Com) : SCORE.Com :=
   match Lc with
   | LOOP.Com.SKIP    => SKIP
   | LOOP.Com.ZER x   => CON x
@@ -18,11 +18,11 @@ def L2S' (ev : Ident) (Lc: LOOP.Com) : SCORE.Com :=
                         FOR ev (INC x) ;;
                         FOR x (DEC ev)
   | LOOP.Com.INC x   => INC x
-  | LOOP.Com.SEQ P Q => L2S' ev P ;;
-                        L2S' ev Q
-  | LOOP.Com.FOR x P => FOR x (L2S' ev P)
+  | LOOP.Com.SEQ P Q => l2s' ev P ;;
+                        l2s' ev Q
+  | LOOP.Com.FOR x P => FOR x (l2s' ev P)
 
-namespace L2S'
+namespace l2s'
 
 example : - Int.negSucc u = Int.ofNat u.succ := by simp [Int.negSucc_coe]
 
@@ -129,9 +129,9 @@ lemma for_dec {x y : Ident} {v₁ v₂ : Int} {τ : SCORE.Store} : (τ x).head? 
     rw [‹(τ y).head? = some v₂›] at ‹(τ y).head? = none›
     contradiction
 
-theorem ev_invariant {x y ev : Ident} {τ : SCORE.Store} : x ≠ ev → y ≠ ev → (τ x).head? = some v₁ → (τ y).head? = some v₂ → (τ ev).head? = some 0 → (τ ev) = ((eval (L2S' ev (LOOP.Com.ASN x y)) τ) ev) := by
+theorem ev_invariant {x y ev : Ident} {τ : SCORE.Store} : x ≠ ev → y ≠ ev → (τ x).head? = some v₁ → (τ y).head? = some v₂ → (τ ev).head? = some 0 → (τ ev) = ((eval (l2s' ev (LOOP.Com.ASN x y)) τ) ev) := by
   intros
-  rw [L2S', eval, eval, eval]
+  rw [l2s', eval, eval, eval]
   rw [for_inc ‹(τ ev).head? = some 0› ‹(τ y).head? = some v₂›, zero_add]
   rw [eval]
   have : ([ev ↦ (v₂ :: (τ ev).tail)]τ) x = τ x := by
@@ -157,12 +157,12 @@ theorem ev_invariant {x y ev : Ident} {τ : SCORE.Store} : x ≠ ev → y ≠ ev
     simpa
   exact (List.cons_head?_tail ‹0 ∈ (τ ev).head?›).symm
 
-lemma ev_zero {x y ev : Ident} {τ : SCORE.Store} : x ≠ ev → y ≠ ev → (τ x).head? = some v₁ → (τ y).head? = some v₂ → (τ ev).head? = some 0 → ((eval (L2S' ev (LOOP.Com.ASN x y)) τ) ev).head? = some 0 := by
+lemma ev_zero {x y ev : Ident} {τ : SCORE.Store} : x ≠ ev → y ≠ ev → (τ x).head? = some v₁ → (τ y).head? = some v₂ → (τ ev).head? = some 0 → ((eval (l2s' ev (LOOP.Com.ASN x y)) τ) ev).head? = some 0 := by
   intros
-  have : τ ev = (eval (L2S' ev (LOOP.Com.ASN x y)) τ) ev := by
+  have : τ ev = (eval (l2s' ev (LOOP.Com.ASN x y)) τ) ev := by
     { exact ev_invariant ‹x ≠ ev› ‹y ≠ ev› ‹(τ x).head? = some v₁› ‹(τ y).head? = some v₂› ‹(τ ev).head? = some 0› }; rw [← this]
   assumption
 
-end L2S'
+end l2s'
 
 end SCORE
