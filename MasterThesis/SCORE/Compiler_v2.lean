@@ -7,34 +7,34 @@ import Mathlib.Data.List.Basic
 
 namespace SCORE
 
-open SCORE.com
+open SCORE.Com
 
-def L2S' (ev : ident) (Lc: LOOP.com) : SCORE.com :=
+def L2S' (ev : Ident) (Lc: LOOP.Com) : SCORE.Com :=
   match Lc with
-  | LOOP.com.SKIP    => SKIP
-  | LOOP.com.ZER x   => CON x
-  | LOOP.com.ASN x y => FOR y (INC ev) ;;
+  | LOOP.Com.SKIP    => SKIP
+  | LOOP.Com.ZER x   => CON x
+  | LOOP.Com.ASN x y => FOR y (INC ev) ;;
                         CON x ;;
                         FOR ev (INC x) ;;
                         FOR x (DEC ev)
-  | LOOP.com.INC x   => INC x
-  | LOOP.com.SEQ P Q => L2S' ev P ;;
+  | LOOP.Com.INC x   => INC x
+  | LOOP.Com.SEQ P Q => L2S' ev P ;;
                         L2S' ev Q
-  | LOOP.com.FOR x P => FOR x (L2S' ev P)
+  | LOOP.Com.FOR x P => FOR x (L2S' ev P)
 
 namespace L2S'
 
 example : - Int.negSucc u = Int.ofNat u.succ := by simp [Int.negSucc_coe]
 
 -- TODO: sostituire con un teorema più generale sulla reversibilità?
-lemma eval_inc_dec_evalI {x : ident} {σ : SCORE.store} : eval (INC x) σ = evalI (DEC x) σ := by
+lemma eval_inc_dec_evalI {x : Ident} {σ : SCORE.Store} : eval (INC x) σ = evalI (DEC x) σ := by
   rw [SCORE.eval, SCORE.evalI]
 
 -- TODO: sostituire con un teorema più generale sulla reversibilità?
-lemma eval_dec_inc_evalI {x : ident} {σ : SCORE.store} : eval (DEC x) σ = evalI (INC x) σ := by
+lemma eval_dec_inc_evalI {x : Ident} {σ : SCORE.Store} : eval (DEC x) σ = evalI (INC x) σ := by
   rw [SCORE.eval, SCORE.evalI]
 
-lemma iter_inc {x : ident} {σ : SCORE.store} {k : Int} (v : ℕ) : (σ x).head? = some k → (fun τ ↦ eval (INC x) τ)^[v] σ = [x ↦ ((k + Int.ofNat v) :: (σ x).tail)]σ := by
+lemma iter_inc {x : Ident} {σ : SCORE.Store} {k : Int} (v : ℕ) : (σ x).head? = some k → (fun τ ↦ eval (INC x) τ)^[v] σ = [x ↦ ((k + Int.ofNat v) :: (σ x).tail)]σ := by
   intros
   induction v generalizing σ with
   | zero      =>
@@ -42,7 +42,7 @@ lemma iter_inc {x : ident} {σ : SCORE.store} {k : Int} (v : ℕ) : (σ x).head?
       { simp }; rw [this]
     have : (k + Int.ofNat 0) = k := by
       { simp }; rw [this]
-    exact SCORE.store.update_unchanged_cons ‹(σ x).head? = k›
+    exact SCORE.Store.update_unchanged_cons ‹(σ x).head? = k›
   | succ m ih =>
     have : (fun τ ↦ eval (INC x) τ)^[m + 1] σ = eval (INC x) ((fun τ ↦ eval (INC x) τ)^[m] σ) := by
       { simp [Nat.add_comm m 1, Function.iterate_add_apply] }; rw[this]
@@ -55,7 +55,7 @@ lemma iter_inc {x : ident} {σ : SCORE.store} {k : Int} (v : ℕ) : (σ x).head?
         { exact (Option.some.inj ‹some (k + Int.ofNat m) = some v›).symm }; rw [this]
       have : (([x ↦ ((k + Int.ofNat m) :: (σ x).tail)]σ) x).tail = (σ x).tail := by
         { simp }; rw [this]
-      rw [SCORE.store.update_shrink]
+      rw [SCORE.Store.update_shrink]
       funext y
       cases eq_or_ne x y with
     | inl =>
@@ -73,9 +73,9 @@ lemma iter_inc {x : ident} {σ : SCORE.store} {k : Int} (v : ℕ) : (σ x).head?
         { simp [‹x ≠ y›] }; rw [this]
     case succ.h_2     => contradiction
 
-lemma iter_dec {x : ident} {σ: SCORE.store} {k : Int} (v : ℕ) : (σ x).head? = some k → (fun τ ↦ eval (DEC x) τ)^[v] σ = [x ↦ ((k - Int.ofNat v) :: (σ x).tail)]σ := sorry
+lemma iter_dec {x : Ident} {σ: SCORE.Store} {k : Int} (v : ℕ) : (σ x).head? = some k → (fun τ ↦ eval (DEC x) τ)^[v] σ = [x ↦ ((k - Int.ofNat v) :: (σ x).tail)]σ := sorry
 
-lemma for_inc {x y : ident} {v₁ v₂ : Int} {τ : SCORE.store} : (τ x).head? = some v₁ → (τ y).head? = some v₂ → eval (FOR y (INC x)) τ = [x ↦ ((v₁ + v₂) :: (τ x).tail)]τ := by
+lemma for_inc {x y : Ident} {v₁ v₂ : Int} {τ : SCORE.Store} : (τ x).head? = some v₁ → (τ y).head? = some v₂ → eval (FOR y (INC x)) τ = [x ↦ ((v₁ + v₂) :: (τ x).tail)]τ := by
   intros
   rw [SCORE.eval]
   split
@@ -102,7 +102,7 @@ lemma for_inc {x y : ident} {v₁ v₂ : Int} {τ : SCORE.store} : (τ x).head? 
     rw [‹(τ y).head? = some v₂›] at ‹(τ y).head? = none›
     contradiction
 
-lemma for_dec {x y : ident} {v₁ v₂ : Int} {τ : SCORE.store} : (τ x).head? = some v₁ → (τ y).head? = some v₂ → eval (FOR y (DEC x)) τ = [x ↦ ((v₁ - v₂) :: (τ x).tail)]τ := by
+lemma for_dec {x y : Ident} {v₁ v₂ : Int} {τ : SCORE.Store} : (τ x).head? = some v₁ → (τ y).head? = some v₂ → eval (FOR y (DEC x)) τ = [x ↦ ((v₁ - v₂) :: (τ x).tail)]τ := by
   intros
   rw [SCORE.eval]
   split
@@ -129,7 +129,7 @@ lemma for_dec {x y : ident} {v₁ v₂ : Int} {τ : SCORE.store} : (τ x).head? 
     rw [‹(τ y).head? = some v₂›] at ‹(τ y).head? = none›
     contradiction
 
-theorem ev_invariant {x y ev : ident} {τ : SCORE.store} : x ≠ ev → y ≠ ev → (τ x).head? = some v₁ → (τ y).head? = some v₂ → (τ ev).head? = some 0 → (τ ev) = ((eval (L2S' ev (LOOP.com.ASN x y)) τ) ev) := by
+theorem ev_invariant {x y ev : Ident} {τ : SCORE.Store} : x ≠ ev → y ≠ ev → (τ x).head? = some v₁ → (τ y).head? = some v₂ → (τ ev).head? = some 0 → (τ ev) = ((eval (L2S' ev (LOOP.Com.ASN x y)) τ) ev) := by
   intros
   rw [L2S', eval, eval, eval]
   rw [for_inc ‹(τ ev).head? = some 0› ‹(τ y).head? = some v₂›, zero_add]
@@ -143,7 +143,7 @@ theorem ev_invariant {x y ev : ident} {τ : SCORE.store} : x ≠ ev → y ≠ ev
   rw [for_inc head_x' head_ev', zero_add]
   have : (([x ↦ (0 :: τ x)][ev ↦ (v₂ :: (τ ev).tail)]τ) x).tail = τ x := by
     { simp }; rw [this]
-  rw [SCORE.store.update_shrink]
+  rw [SCORE.Store.update_shrink]
   have head_x'' : (([x ↦ (v₂ :: τ x)][ev ↦ (v₂ :: (τ ev).tail)]τ) x).head? = some v₂ := by
     simp
   have head_ev'' : (([x ↦ (v₂ :: τ x)][ev ↦ (v₂ :: (τ ev).tail)]τ) ev).head? = some v₂ := by
@@ -157,9 +157,9 @@ theorem ev_invariant {x y ev : ident} {τ : SCORE.store} : x ≠ ev → y ≠ ev
     simpa
   exact (List.cons_head?_tail ‹0 ∈ (τ ev).head?›).symm
 
-lemma ev_zero {x y ev : ident} {τ : SCORE.store} : x ≠ ev → y ≠ ev → (τ x).head? = some v₁ → (τ y).head? = some v₂ → (τ ev).head? = some 0 → ((eval (L2S' ev (LOOP.com.ASN x y)) τ) ev).head? = some 0 := by
+lemma ev_zero {x y ev : Ident} {τ : SCORE.Store} : x ≠ ev → y ≠ ev → (τ x).head? = some v₁ → (τ y).head? = some v₂ → (τ ev).head? = some 0 → ((eval (L2S' ev (LOOP.Com.ASN x y)) τ) ev).head? = some 0 := by
   intros
-  have : τ ev = (eval (L2S' ev (LOOP.com.ASN x y)) τ) ev := by
+  have : τ ev = (eval (L2S' ev (LOOP.Com.ASN x y)) τ) ev := by
     { exact ev_invariant ‹x ≠ ev› ‹y ≠ ev› ‹(τ x).head? = some v₁› ‹(τ y).head? = some v₂› ‹(τ ev).head? = some 0› }; rw [← this]
   assumption
 

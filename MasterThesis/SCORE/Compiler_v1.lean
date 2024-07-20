@@ -6,29 +6,29 @@ import Mathlib.Tactic.Linarith
 
 namespace SCORE
 
-open SCORE.com
+open SCORE.Com
 
-def L2S (Lc : LOOP.com) : SCORE.com :=
+def L2S (Lc : LOOP.Com) : SCORE.Com :=
   match Lc with
-  | LOOP.com.SKIP    => SKIP
-  | LOOP.com.ZER x   => CON x
-  | LOOP.com.ASN x y => if x ≠ y then
+  | LOOP.Com.SKIP    => SKIP
+  | LOOP.Com.ZER x   => CON x
+  | LOOP.Com.ASN x y => if x ≠ y then
                           CON x ;;
                           FOR y (INC x)
                         else SKIP
-  | LOOP.com.INC x   => INC x
-  | LOOP.com.SEQ P Q => L2S P ;;
+  | LOOP.Com.INC x   => INC x
+  | LOOP.Com.SEQ P Q => L2S P ;;
                         L2S Q
-  | LOOP.com.FOR x P => FOR x (L2S P)
+  | LOOP.Com.FOR x P => FOR x (L2S P)
 
 namespace L2S
 
-def eq_stores (σ : LOOP.store) (τ : SCORE.store) : Prop :=
-  ∀ (x : ident), (some (Int.ofNat (σ x)) = (τ x).head?)
+def eq_stores (σ : LOOP.Store) (τ : SCORE.Store) : Prop :=
+  ∀ (x : Ident), (some (Int.ofNat (σ x)) = (τ x).head?)
 
 infix:50 "=ₛ" => eq_stores
 
-lemma eq_stores_update {σ : LOOP.store} {τ : SCORE.store} (x : ident) (v : ℕ) : σ =ₛ τ → [x ↦ v]σ =ₛ [x ↦ (Int.ofNat v :: τ x)]τ := by
+lemma eq_stores_update {σ : LOOP.Store} {τ : SCORE.Store} (x : Ident) (v : ℕ) : σ =ₛ τ → [x ↦ v]σ =ₛ [x ↦ (Int.ofNat v :: τ x)]τ := by
   intros _ y
   cases eq_or_ne x y with
   | inl /- x = y -/ =>
@@ -45,7 +45,7 @@ lemma eq_stores_update {σ : LOOP.store} {τ : SCORE.store} (x : ident) (v : ℕ
       { simp [‹x ≠ y›] }; rw [this]
     exact ‹σ=ₛτ› y
 
-lemma eq_stores_INC {σ : LOOP.store} {τ : SCORE.store} {x : ident} {v : ℕ}: [x ↦ v]σ =ₛ τ → [x ↦ (v + 1)]σ =ₛ SCORE.eval (INC x) τ := by
+lemma eq_stores_INC {σ : LOOP.Store} {τ : SCORE.Store} {x : Ident} {v : ℕ}: [x ↦ v]σ =ₛ τ → [x ↦ (v + 1)]σ =ₛ SCORE.eval (INC x) τ := by
   intros _ y
   cases eq_or_ne x y with
   | inl /- x = y -/ =>
@@ -78,28 +78,28 @@ lemma eq_stores_INC {σ : LOOP.store} {τ : SCORE.store} {x : ident} {v : ℕ}: 
       { simp [‹x ≠ y›] }; rw [this]
 
 /- Possibili formalizzazioni alternative con stato
-  1) {σ : LOOP.store} {τ τ' : SCORE.store} (LP : LOOP.com) : σ =ₛ τ → (SCORE.eval (L2S LP) (prog τ)) = (prog τ') → (LOOP.eval LP σ) =ₛ τ'
-  2) {σ : LOOP.store} {τ : SCORE.store} (LP : LOOP.com) : σ =ₛ τ → ∃ (τ' : SCORE.store), (SCORE.eval (L2S LP) (prog τ) = (prog τ')) ∧ (LOOP.eval LP σ) =ₛ τ'
+  1) {σ : LOOP.Store} {τ τ' : SCORE.Store} (LP : LOOP.Com) : σ =ₛ τ → (SCORE.eval (L2S LP) (prog τ)) = (prog τ') → (LOOP.eval LP σ) =ₛ τ'
+  2) {σ : LOOP.Store} {τ : SCORE.Store} (LP : LOOP.Com) : σ =ₛ τ → ∃ (τ' : SCORE.Store), (SCORE.eval (L2S LP) (prog τ) = (prog τ')) ∧ (LOOP.eval LP σ) =ₛ τ'
 
   Delle due, probabilmente la 2) è più forte, perchè dimostra che l'esecuzione di un programma compilato da LOOP non può mail fallire, ovvero il
   fallimento è una caratteristica dei soli programmi scritti direttamente in SCORE
 
   Oppure si introduce un tipo induttivo
 
-  inductive LOOP.state : Type :=
-  | prog : LOOP.store → state
+  inductive LOOP.State : Type :=
+  | prog : LOOP.Store → State
 
   che permette di estendere la definizione sopra
 
-  def eq_states (s : LOOP.state) (t : SCORE.state) : Prop :=
+  def eq_states (s : LOOP.State) (t : SCORE.State) : Prop :=
     match s, t with
-    | prog σ, prog τ => ∀ (x : ident), (some (Int.ofNat (σ x)) = (τ x).head?)
+    | prog σ, prog τ => ∀ (x : Ident), (some (Int.ofNat (σ x)) = (τ x).head?)
     | _     , _      => False
 
   e mantenere sostazialmente invariate le definizioni dei teoremi.
   Gli altri lemmi seguono dalla scelta fatta per la soundness. -/
 
-theorem soundness {σ : LOOP.store} {τ : SCORE.store} (LP : LOOP.com) : σ =ₛ τ → (LOOP.eval LP σ) =ₛ (SCORE.eval (L2S LP) τ)
+theorem soundness {σ : LOOP.Store} {τ : SCORE.Store} (LP : LOOP.Com) : σ =ₛ τ → (LOOP.eval LP σ) =ₛ (SCORE.eval (L2S LP) τ)
   intro
   induction LP generalizing σ τ with
   | SKIP =>
@@ -129,7 +129,7 @@ theorem soundness {σ : LOOP.store} {τ : SCORE.store} (LP : LOOP.com) : σ =ₛ
     | inl /- x = y -/ =>
       have : (if x ≠ y then (CON x) ;; (FOR y (INC x)) else SKIP) = SKIP := by
         { simp [‹x = y›] }; rw [this]
-      rw [SCORE.eval, ‹x = y›, LOOP.store.update_no_update]
+      rw [SCORE.eval, ‹x = y›, LOOP.Store.update_no_update]
       assumption
     | inr /- x ≠ y -/ =>
       have : (if x ≠ y then (CON x) ;; (FOR y (INC x)) else SKIP) = (CON x) ;; (FOR y (INC x)) := by

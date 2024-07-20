@@ -1,14 +1,13 @@
 import Mathlib.Logic.Function.Iterate
 
 import MasterThesis.SCORE.Language
-import MasterThesis.SCORE.Functions
 
 namespace SCORE
 
-open SCORE.com SCORE.store SCORE.state
+open SCORE.State SCORE.Com
 
 mutual
-  def eval (P : com) (s : state) : state :=
+  def eval (P : Com) (s : State) : State :=
     match s with
     | fail   => fail
     | prog σ =>
@@ -30,7 +29,7 @@ mutual
                                | Int.ofNat   k => (fun τ => eval  P τ)^[k] s
                                | Int.negSucc k => (fun τ => evalI P τ)^[k.succ] s
                    | none   => fail
-  def evalI (P : com) (s : state) : state :=
+  def evalI (P : Com) (s : State) : State :=
     match s with
     | fail   => fail
     | prog σ =>

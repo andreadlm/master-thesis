@@ -1,10 +1,9 @@
-import MasterThesis.Commons
 import MasterThesis.SCORE.Language
 import MasterThesis.SCORE.Interpreter
 
-open SCORE SCORE.com SCORE.store SCORE.state
+open SCORE SCORE.Com SCORE.Store SCORE.State
 
-lemma invertible_SKIP {s t : state} : (eval SKIP s) = t ∧ t ≠ ⊥ ↔ (eval SKIP⁻¹ t) = s ∧ s ≠ ⊥ := by
+lemma invertible_SKIP {s t : State} : (eval SKIP s) = t ∧ t ≠ ⊥ ↔ (eval SKIP⁻¹ t) = s ∧ s ≠ ⊥ := by
   constructor
   case mp  =>
     intro
@@ -43,7 +42,7 @@ lemma invertible_SKIP {s t : state} : (eval SKIP s) = t ∧ t ≠ ⊥ ↔ (eval 
         symm at ‹⊥ = s›
         contradiction
 
-lemma invertible_CON {s t : state} {x : ident} : (eval (CON x) s) = t ∧ t ≠ ⊥ ↔ (eval (CON x)⁻¹ t) = s ∧ s ≠ ⊥ := by
+lemma invertible_CON {s t : State} {x : Ident} : (eval (CON x) s) = t ∧ t ≠ ⊥ ↔ (eval (CON x)⁻¹ t) = s ∧ s ≠ ⊥ := by
   constructor
   case mp  =>
     intro
@@ -100,13 +99,13 @@ lemma invertible_CON {s t : state} {x : ident} : (eval (CON x) s) = t ∧ t ≠ 
       symm at ‹⊥ = s›
       contradiction
 
-lemma invertible_NOC {s t : state} {x : ident} : (eval (NOC x) s) = t ∧ t ≠ ⊥ ↔ (eval (NOC x)⁻¹ t) = s ∧ s ≠ ⊥ := by
+lemma invertible_NOC {s t : State} {x : Ident} : (eval (NOC x) s) = t ∧ t ≠ ⊥ ↔ (eval (NOC x)⁻¹ t) = s ∧ s ≠ ⊥ := by
   have : (NOC x) = (CON x)⁻¹ := by
     { rw [inv] }; rw [this]
   rw [inv]
   exact invertible_CON.symm
 
-lemma invertible_DEC {s t : state} {x : ident} : (eval (DEC x) s) = t ∧ t ≠ ⊥ ↔ (eval (DEC x)⁻¹ t) = s ∧ s ≠ ⊥ := by
+lemma invertible_DEC {s t : State} {x : Ident} : (eval (DEC x) s) = t ∧ t ≠ ⊥ ↔ (eval (DEC x)⁻¹ t) = s ∧ s ≠ ⊥ := by
   constructor
   case mp  =>
     intro
@@ -177,13 +176,13 @@ lemma invertible_DEC {s t : state} {x : ident} : (eval (DEC x) s) = t ∧ t ≠ 
       symm at ‹⊥ = s›
       contradiction
 
-lemma invertible_INC {s t : state} {x : ident} : (eval (INC x) s) = t ∧ t ≠ ⊥ ↔ (eval (INC x)⁻¹ t) = s ∧ s ≠ ⊥ := by
+lemma invertible_INC {s t : State} {x : Ident} : (eval (INC x) s) = t ∧ t ≠ ⊥ ↔ (eval (INC x)⁻¹ t) = s ∧ s ≠ ⊥ := by
   have : (INC x) = (DEC x)⁻¹ := by
     { rw [inv] }; rw [this]
   rw [inv]
   exact invertible_DEC.symm
 
-lemma invertible_SEQ {s t : state} {P Q : com} (ih₁ : ∀ {s t : state}, eval P s = t ∧ t ≠ ⊥ ↔ eval P⁻¹ t = s ∧ s ≠ ⊥) (ih₂ : ∀ {s t : state}, eval Q s = t ∧ t ≠ ⊥ ↔ eval Q⁻¹ t = s ∧ s ≠ ⊥) : (eval (SEQ P Q) s) = t ∧ t ≠ ⊥ ↔ (eval (SEQ P Q)⁻¹ t) = s ∧ s ≠ ⊥ := by
+lemma invertible_SEQ {s t : State} {P Q : Com} (ih₁ : ∀ {s t : State}, eval P s = t ∧ t ≠ ⊥ ↔ eval P⁻¹ t = s ∧ s ≠ ⊥) (ih₂ : ∀ {s t : State}, eval Q s = t ∧ t ≠ ⊥ ↔ eval Q⁻¹ t = s ∧ s ≠ ⊥) : (eval (SEQ P Q) s) = t ∧ t ≠ ⊥ ↔ (eval (SEQ P Q)⁻¹ t) = s ∧ s ≠ ⊥ := by
   constructor
   case mp =>
     intro
@@ -221,7 +220,7 @@ lemma invertible_SEQ {s t : state} {P Q : com} (ih₁ : ∀ {s t : state}, eval 
       contradiction
 
 
-theorem invertible {s t : state} {P : com} : (eval P s) = t ∧ t ≠ ⊥ ↔ (eval P⁻¹ t) = s ∧ s ≠ ⊥ := by
+theorem invertible {s t : State} {P : Com} : (eval P s) = t ∧ t ≠ ⊥ ↔ (eval P⁻¹ t) = s ∧ s ≠ ⊥ := by
   induction P generalizing s t
   case SKIP        => exact invertible_SKIP
   case CON         => exact invertible_CON
@@ -235,7 +234,7 @@ theorem invertible {s t : state} {P : com} : (eval P s) = t ∧ t ≠ ⊥ ↔ (e
   La condizione è dimostrabile per mezzo di invertible nel caso in cui non si verifichino errori,
   nel caso di situazioni di errore però non risulta essere adatta. I sorry da dimostrare sono "banali".
 -/
-theorem invertible' {s : state} {P : com} : (eval (P ;; P⁻¹) s) = s := by
+theorem invertible' {s : State} {P : Com} : (eval (P ;; P⁻¹) s) = s := by
   have : (eval (P ;; P⁻¹) s) = eval P⁻¹ (eval P s) := by
     { sorry }; rw [this]
   have := prog_or_bot (eval P s)

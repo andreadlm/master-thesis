@@ -1,1 +1,1 @@
-abbrev ident := String
+abbrev Ident := String
