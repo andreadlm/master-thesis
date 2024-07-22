@@ -45,10 +45,24 @@ inductive Com : Type
 | INC : Ident → Com
 | SEQ : Com → Com → Com
 | FOR : Ident → Com → Com
-deriving Repr
 
 open Com
 
 infixl:80 ";;" => SEQ
+
+def comToString (indLv : Nat) (P : Com) : String :=
+  let ind : String := (String.append "  ")^[indLv] ""
+  match P with
+  | SKIP    => s!"{ind}SKIP"
+  | ZER x   => s!"{ind}ZER {x}"
+  | ASN x y => s!"{ind}ASN {x} {y}"
+  | INC x   => s!"{ind}INC {x}"
+  | SEQ P Q => s!"{comToString indLv P};;\n{comToString indLv Q}"
+  | FOR x P => s!"{ind}FOR {x}\n{comToString (indLv + 1) P}"
+
+instance : ToString Com where
+  toString := comToString 0
+
+#eval (SEQ (FOR "x" (SEQ (SEQ (ZER "x") (FOR "x" (SEQ (ASN "x" "y") (INC "y")))) (INC "x"))) (ZER "x"))
 
 end LOOP
