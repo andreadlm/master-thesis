@@ -14,5 +14,4 @@ require mathlib from git
 @[default_target]
 lean_lib «MasterThesis» where
 
-@[default_target]
-  lean_exe «Compile» where
+lean_exe «Compile» where
