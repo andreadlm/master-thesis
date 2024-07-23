@@ -27,82 +27,93 @@ def var : Parsec String := do
     firstChar := satisfy Char.isAlpha
     nonFirstChar := satisfy $ fun c => c.isAlpha || c.isDigit || c == '_'
 
-#eval Lean.Parsec.run var "x"
-#eval Lean.Parsec.run var "xyz"
-#eval Lean.Parsec.run var "_x"
-#eval Lean.Parsec.run var "1x"
-
--- TODO: controllare
 def whitespace : Parsec Unit := do
   let _ ← many $ satisfy $ fun c => c == ' ' || c == '\t'
-
-#eval Lean.Parsec.run whitespace ""
-#eval Lean.Parsec.run whitespace " "
-#eval Lean.Parsec.run whitespace "  "
-#eval Lean.Parsec.run whitespace "\t"
 
 def lexeme {α : Type} (p : Parsec α) : Parsec α := do
   let x ← p
   whitespace
   return x
 
-def newline : Parsec Unit := lexeme $ do
-  let _ ← many1 $ satisfy $ fun c => c == '\n'
+def newline : Parsec Unit := do
+  skipChar '\n'
+  let _ ← many $ satisfy $ fun c => c == '\n' || c == ' ' || c == '\t'
 
-def instruction {α : Type} (p : Parsec α) : Parsec α := do
+def program {α : Type} (p : Parsec α) : Parsec α := do
   let x ← p
-  newline
+  eof
   return x
 
-def pSKIP : Parsec LOOP.Com := instruction $ do
-  lexeme $ skipString $ "SKIP"
-  return LOOP.Com.SKIP
+mutual
+  partial def pProgram : Parsec LOOP.Com :=
+    program $ pCom
 
-#eval Lean.Parsec.run pSKIP "SKIP \n"
+  partial def pCom : Parsec LOOP.Com :=
+    attempt pSEQ  <|> pSingle
 
-def pZER : Parsec LOOP.Com := instruction $ do
-  let i ← lexeme $ var
-  lexeme $ skipChar '='
-  lexeme $ skipChar '0'
-  return LOOP.Com.ZER i
+  partial def pSingle : Parsec LOOP.Com :=
+    attempt pSKIP <|>
+    attempt pZER  <|>
+    attempt pASN  <|>
+    attempt pINC  <|>
+            pFOR
 
-#eval Lean.Parsec.run pZER "x1 = 0 \n"
+  partial def pSKIP : Parsec LOOP.Com := do
+    lexeme $ skipString $ "SKIP"
+    return LOOP.Com.SKIP
 
-def pASN : Parsec LOOP.Com := instruction $ do
-  let i1 ← lexeme $ var
-  lexeme $ skipChar '='
-  let i2 ← lexeme $ var
-  return LOOP.Com.ASN i1 i2
+  partial def pZER : Parsec LOOP.Com := do
+    let i ← lexeme $ var
+    lexeme $ skipChar '='
+    lexeme $ skipChar '0'
+    return LOOP.Com.ZER i
 
-#eval Lean.Parsec.run pASN "x1 = x2 \n"
+  partial def pASN : Parsec LOOP.Com := do
+    let i1 ← lexeme $ var
+    lexeme $ skipChar '='
+    let i2 ← lexeme $ var
+    return LOOP.Com.ASN i1 i2
 
-def pINC : Parsec LOOP.Com := instruction $ do
-  let i ← lexeme $ var
-  lexeme $ skipChar '='
-  lexeme $ skipString i
-  lexeme $ skipChar '+'
-  lexeme $ skipChar '1'
-  return LOOP.Com.INC i
+  partial def pINC : Parsec LOOP.Com := do
+    let i ← lexeme $ var
+    lexeme $ skipString "+="
+    lexeme $ skipChar '1'
+    return LOOP.Com.INC i
 
-#eval Lean.Parsec.run pINC "x1 = x1 + 1 \n"
+  partial def pSEQ : Parsec LOOP.Com := do
+    let P ← pSingle
+    newline
+    let Q ← pCom
+    return LOOP.Com.SEQ P Q
 
-def pSingle : Parsec LOOP.Com :=
-  attempt pSKIP <|>
-  attempt pZER  <|>
-  attempt pASN  <|>
-  attempt pINC
+  partial def pFOR := do
+    lexeme $ skipString "LOOP"
+    let i ← lexeme $ var
+    newline
+    let body ← pCom
+    newline
+    lexeme $ skipString "END"
+    return LOOP.Com.FOR i body
+end
 
-#eval Lean.Parsec.run pSingle "SKIP \n"
-#eval Lean.Parsec.run pSingle "x1 = 0 \n"
-#eval Lean.Parsec.run pSingle "x1 = x2 \n"
-#eval Lean.Parsec.run pSingle "x1 = x1 + 1 \n"
+#eval Lean.Parsec.run pProgram "SKIP"
+#eval Lean.Parsec.run pProgram "x = 0"
+#eval Lean.Parsec.run pProgram "x = y"
+#eval Lean.Parsec.run pProgram "x += 1"
+#eval Lean.Parsec.run pProgram "LOOP x1 \n x += 1 \n END"
+#eval Lean.Parsec.run pProgram "x2 += 1 \n x1 = x2"
 
-def pFOR : Parsec LOOP.Com := instruction $ do
-  lexeme $ skipString "LOOP"
-  let i ← lexeme $ var
-  newline
-  let body ← pSingle
-  lexeme $ skipString "END"
-  return LOOP.Com.FOR i body
+def test : String :=
+  "x1 = 0
+   x2 = 0
+   LOOP x1
+     x2 += 1
+     x1 = x2
+     LOOP x2
+       x3 = 0
+       x3 += 1
+       x1 = 0
+     END
+  END"
 
-#eval Lean.Parsec.run pFOR "LOOP x \n x = 0 \n END \n"
+#eval Lean.Parsec.run pCom test
