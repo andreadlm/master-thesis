@@ -54,11 +54,11 @@ def comToString (indLv : Nat) (P : Com) : String :=
   let ind : String := (String.append "  ")^[indLv] ""
   match P with
   | SKIP    => s!"{ind}SKIP"
-  | ZER x   => s!"{ind}ZER {x}"
-  | ASN x y => s!"{ind}ASN {x} {y}"
-  | INC x   => s!"{ind}INC {x}"
-  | SEQ P Q => s!"{comToString indLv P};;\n{comToString indLv Q}"
-  | FOR x P => s!"{ind}FOR {x}\n{comToString (indLv + 1) P}"
+  | ZER x   => s!"{ind}{x} = 0"
+  | ASN x y => s!"{ind}{x} = {y}"
+  | INC x   => s!"{ind}{x} = {x} + 1"
+  | SEQ P Q => s!"{comToString indLv P}\n{comToString indLv Q}"
+  | FOR x P => s!"{ind}LOOP {x}\n{comToString (indLv + 1) P}\n{ind}END"
 
 instance : ToString Com where
   toString := comToString 0
