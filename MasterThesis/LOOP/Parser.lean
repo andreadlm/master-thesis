@@ -1,3 +1,9 @@
+/- References
+  * https://jakewheat.github.io/intro_to_parsing/
+  * https://wiki.haskell.org/Parsing_a_simple_imperative_language
+  * https://leanprover-community.github.io/mathlib4_docs/Lean/Data/Json/Parser.html
+-/
+
 import Lean.Data.Parsec
 
 import MasterThesis.LOOP.Language
