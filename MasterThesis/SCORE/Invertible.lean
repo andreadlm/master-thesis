@@ -219,7 +219,6 @@ lemma invertible_SEQ {s t : State} {P Q : Com} (ih₁ : ∀ {s t : State}, eval 
       symm at ‹⊥ = s›
       contradiction
 
-
 theorem invertible {s t : State} {P : Com} : (eval P s) = t ∧ t ≠ ⊥ ↔ (eval P⁻¹ t) = s ∧ s ≠ ⊥ := by
   induction P generalizing s t
   case SKIP        => exact invertible_SKIP
