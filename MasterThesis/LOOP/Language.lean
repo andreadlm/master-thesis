@@ -1,4 +1,22 @@
+/-
+"A LEAN-certified reversibilization of Meyer-Ritchie LOOP language".
+Master thesis in computer science, University of Turin.
+Authors: Andrea Delmastro
+-/
 import MasterThesis.Commons
+
+/-!
+# LOOP Language
+
+This file defines LOOP, a simple imperative programming language developed by Meyer and Ritchie that
+precisely captures the primitive recursive functions.
+
+## Implementation notes
+
+## References
+
+See [MeyerRitchieLoop] for the original account on LOOP language.
+-/
 
 namespace LOOP
 
