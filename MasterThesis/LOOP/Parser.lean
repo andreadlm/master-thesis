@@ -28,7 +28,7 @@ def lexeme {α : Type} (p : Parsec α) : Parsec α := do
   return x
 
 def newline : Parsec Unit := do
-  skipChar '\n'
+  skipChar '\n' <|> skipString "\r\n"
   ws
 
 mutual
