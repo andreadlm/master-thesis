@@ -1,4 +1,5 @@
-import Mathlib.Logic.Function.Iterate
+import Mathlib.Tactic.Basic
+import Mathlib.Logic.Basic
 
 import MasterThesis.Commons
 
@@ -51,14 +52,17 @@ open Com
 infixl:80 ";;" => SEQ
 
 def comToString (indLv : Nat) (P : Com) : String :=
-  let ind : String := (String.append "  ")^[indLv] ""
+  let rec ind (indLv : Nat) : String :=
+    match indLv with
+    | .zero   => ""
+    | .succ m => "  " ++ ind m
   match P with
-  | SKIP    => s!"{ind}SKIP"
-  | ZER x   => s!"{ind}{x} = 0"
-  | ASN x y => s!"{ind}{x} = {y}"
-  | INC x   => s!"{ind}{x} += 1"
+  | SKIP    => s!"{ind indLv}SKIP"
+  | ZER x   => s!"{ind indLv}{x} = 0"
+  | ASN x y => s!"{ind indLv}{x} = {y}"
+  | INC x   => s!"{ind indLv}{x} += 1"
   | SEQ P Q => s!"{comToString indLv P}\n{comToString indLv Q}"
-  | FOR x P => s!"{ind}LOOP {x}\n{comToString (indLv + 1) P}\n{ind}END"
+  | FOR x P => s!"{ind indLv}LOOP {x}\n{comToString (indLv + 1) P}\n{ind indLv}END"
 
 instance : ToString Com where
   toString := comToString 0
