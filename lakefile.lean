@@ -8,7 +8,7 @@ package «master_thesis» where
 
 require mathlib from git "https://github.com/leanprover-community/mathlib4.git" @ "v4.10.0"
 
-meta if get_config? doc = some "on" then
+-- meta if get_config? doc = some "on" then
 require «doc-gen4» from git "https://github.com/leanprover/doc-gen4" @ "v4.10.0"
 
 @[default_target]
