@@ -1,3 +1,5 @@
+import Mathlib.Logic.Function.Iterate
+
 import MasterThesis.LOOP.Language
 
 namespace LOOP
