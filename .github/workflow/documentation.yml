@@ -3,7 +3,7 @@ name: Generate documentation
 on:
   push:
     branches:
-      - master
+      - workflow
 
 jobs:
   build:
