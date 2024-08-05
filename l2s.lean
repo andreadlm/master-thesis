@@ -1,4 +1,6 @@
+import MasterThesis.SCORE.Language
 import MasterThesis.LOOP.Parser
+import MasterThesis.SCORE.Compiler_v1
 
 structure Config where
   inputFile  : String := ""
@@ -29,7 +31,7 @@ def main (args : List String) : IO UInt32 := do
         let inputText ← IO.FS.readFile config.inputFile
         match Lean.Parsec.run parse inputText with
         | .ok prog =>
-          IO.FS.writeFile config.outputFile (toString prog)
+          IO.FS.writeFile config.outputFile (toString <| SCORE.l2s prog)
           return UInt32.ofNat 0
         | .error e =>
           IO.eprintln s!"Error: {e}"
