@@ -3,8 +3,8 @@ import MasterThesis.SCORE.Language
 import MasterThesis.SCORE.Interpreter
 import MasterThesis.SCORE.Compiler_v1
 import MasterThesis.SCORE.Compiler_v2
--- import MasterThesis.SCORE.Proofs.Language
--- import MasterThesis.SCORE.Proofs.Invertible
+import MasterThesis.SCORE.Proofs.Language
+import MasterThesis.SCORE.Proofs.Invertible
 -- import MasterThesis.SCORE.Proofs.Compiler_v1
 -- import MasterThesis.SCORE.Proofs.Compiler_v2
 import MasterThesis.LOOP.Language
