@@ -6,7 +6,7 @@ Authors: Andrea Delmastro
 import MasterThesis.Commons
 
 /-!
-# LOOP Language
+# LOOP language
 
 This file defines LOOP, a simple imperative programming language developed by Meyer and Ritchie that
 precisely captures the primitive recursive functions.

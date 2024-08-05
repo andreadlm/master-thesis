@@ -1,6 +1,5 @@
 import Mathlib.Tactic.Basic
 import Mathlib.Logic.Basic
-
 import MasterThesis.LOOP.Language
 
 open LOOP Store
