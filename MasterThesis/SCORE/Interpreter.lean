@@ -1,6 +1,5 @@
-import Mathlib.Logic.Function.Iterate
-
 import MasterThesis.SCORE.Language
+import Mathlib.Logic.Function.Iterate
 
 namespace SCORE
 
