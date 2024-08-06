@@ -13,7 +13,7 @@ lemma invertible_SKIP {s t : State} : (eval SKIP s) = t ∧ t ≠ ⊥ ↔ (eval 
       constructor
       case left  =>
         rw [eval] at ‹eval SKIP (prog σ) = t›
-        rw [← ‹prog σ = t›, inv, eval]
+        rw [inv, ←‹prog σ = t›, eval]
       case right =>
         by_contra
         simp only [‹prog σ = ⊥›, eval] at ‹eval SKIP (prog σ) = t›
@@ -31,7 +31,7 @@ lemma invertible_SKIP {s t : State} : (eval SKIP s) = t ∧ t ≠ ⊥ ↔ (eval 
         constructor
         case left  =>
           rw [inv, eval] at ‹eval SKIP⁻¹ (prog σ) = s›
-          rw [← ‹prog σ = s›, eval]
+          rw [←‹prog σ = s›, eval]
         case right =>
           by_contra
           simp only [‹prog σ = ⊥›, eval] at ‹eval SKIP (prog σ) = s›
@@ -53,14 +53,19 @@ lemma invertible_CON {s t : State} {x : Ident} : (eval (CON x) s) = t ∧ t ≠ 
       constructor
       case left  =>
         rw [eval] at ‹eval (CON x) (prog σ) = t›
-        rw [← ‹prog ([x ↦ (0 :: σ x)] σ) = t›, inv, eval]
-        have : ([x ↦ (0 :: σ x)] σ) x = (0 :: σ x) := by
-          { simp }; rw [this]
-        have : (0 :: σ x).head? = some 0 := by
-          { simp }; simp only [this]
-        have : (0 :: σ x).tail = σ x := by
-          { simp }; rw [this]
-        rw [update_shrink, update_unchanged]
+        rw [←‹prog ([x ↦ 0 :: σ x] σ) = t›, inv, eval]
+        have : (([x ↦ 0 :: σ x] σ) x).head? = some 0 := by
+          calc
+            (([x ↦ 0 :: σ x] σ) x).head?
+            _ = (0 :: σ x).head? := by simp
+            _ = some 0           := by simp
+        simp only [this]
+        calc
+          prog ([x ↦ (([x ↦ 0 :: σ x] σ) x).tail][x ↦ 0 :: σ x] σ)
+          _ = prog ([x ↦ (([x ↦ 0 :: σ x] σ) x).tail] σ) := by rw [update_shrink]
+          _ = prog ([x ↦ (0 :: σ x).tail] σ)             := by simp
+          _ = prog ([x ↦ σ x] σ)                         := by simp
+          _ = prog σ                                     := by rw [update_unchanged]
       case right =>
         by_contra
         simp only [‹prog σ = ⊥›, eval] at ‹eval (CON x) (prog σ) = t›
@@ -81,11 +86,9 @@ lemma invertible_CON {s t : State} {x : Ident} : (eval (CON x) s) = t ∧ t ≠ 
         rw [inv, eval] at ‹eval (CON x)⁻¹ (prog σ) = s›
         split at lh
         case h_1 =>
-          rw [← ‹prog ([x ↦ (σ x).tail]σ) = s›, eval]
-          have : ([x ↦ (σ x).tail] σ) x = (σ x).tail := by
-            { simp }; rw [this]
-          rw [update_shrink]
-          rw [update_unchanged_cons ‹(σ x).head? = some 0›]
+          rw [←‹prog ([x ↦ (σ x).tail] σ) = s›, eval]
+          have : ([x ↦ (σ x).tail] σ) x = (σ x).tail := by simp
+          rw [this, update_shrink, update_unchanged_cons ‹(σ x).head? = some 0›]
         case h_2 =>
           symm at ‹⊥ = s›
           contradiction
@@ -100,9 +103,8 @@ lemma invertible_CON {s t : State} {x : Ident} : (eval (CON x) s) = t ∧ t ≠ 
       contradiction
 
 lemma invertible_NOC {s t : State} {x : Ident} : (eval (NOC x) s) = t ∧ t ≠ ⊥ ↔ (eval (NOC x)⁻¹ t) = s ∧ s ≠ ⊥ := by
-  have : (NOC x) = (CON x)⁻¹ := by
-    { rw [inv] }; rw [this]
-  rw [inv]
+  have : (NOC x) = (CON x)⁻¹ := by rw [inv]
+  rw [this, inv]
   exact invertible_CON.symm
 
 lemma invertible_DEC {s t : State} {x : Ident} : (eval (DEC x) s) = t ∧ t ≠ ⊥ ↔ (eval (DEC x)⁻¹ t) = s ∧ s ≠ ⊥ := by
@@ -118,17 +120,19 @@ lemma invertible_DEC {s t : State} {x : Ident} : (eval (DEC x) s) = t ∧ t ≠ 
         rw [eval] at ‹eval (DEC x) (prog σ) = t›
         split at lh
         case h_1 v _ =>
-          rw [← ‹prog ([x ↦ ((v - 1) :: (σ x).tail)]σ) = t›, inv, eval]
-          have : ([x ↦ ((v - 1) :: (σ x).tail)] σ) x = (v - 1) :: (σ x).tail := by
-            { simp }; rw [this]
-          have : ((v - 1) :: (σ x).tail).head? = some (v - 1) := by
-            { rw [List.head?] }; simp only [this]
-          rw [update_shrink]
-          have : (v - 1 + 1) = v := by
-            { rw [Int.sub_add_cancel] }; rw [this]
-          have : ((v - 1) :: (σ x).tail).tail = (σ x).tail := by
-            { rw [List.tail_cons] }; rw [this]
-          rw [update_unchanged_cons ‹(σ x).head? = some v›]
+          rw [inv, ←‹prog ([x ↦ (v - 1) :: (σ x).tail] σ) = t›, eval]
+          have : (([x ↦ (v - 1) :: (σ x).tail] σ) x).head? = some (v - 1) := by
+            calc
+              (([x ↦ ((v - 1) :: (σ x).tail)] σ) x).head?
+              _ = ((v - 1) :: (σ x).tail).head? := by simp
+              _ = some (v - 1)                  := by simp
+          simp only [this, update_shrink]
+          calc
+            prog ([x ↦ (v - 1 + 1) :: (([x ↦ (v - 1) :: (σ x).tail] σ) x).tail] σ)
+            _ = prog ([x ↦ v :: (([x ↦ (v - 1) :: (σ x).tail] σ) x).tail] σ) := by rw [Int.sub_add_cancel]
+            _ = prog ([x ↦ v :: ((v - 1) :: (σ x).tail).tail] σ)              := by simp
+            _ = prog ([x ↦ v :: (σ x).tail] σ)                               := by simp
+            _ = prog σ                                                       := by rw [update_unchanged_cons ‹(σ x).head? = some v›]
         case h_2 =>
           symm at ‹⊥ = t›
           contradiction
@@ -152,7 +156,7 @@ lemma invertible_DEC {s t : State} {x : Ident} : (eval (DEC x) s) = t ∧ t ≠ 
         rw [inv, eval] at ‹eval (DEC x)⁻¹ (prog σ) = s›
         split at lh
         case h_1 v _ =>
-          rw [← ‹prog ([x ↦ ((v + 1) :: (σ x).tail)]σ) = s›, eval]
+          rw [←‹prog ([x ↦ ((v + 1) :: (σ x).tail)]σ) = s›, eval]
           have : ([x ↦ ((v + 1) :: (σ x).tail)] σ) x = (v + 1) :: (σ x).tail := by
             { simp }; rw [this]
           have : ((v + 1) :: (σ x).tail).head? = some (v + 1) := by
@@ -242,7 +246,7 @@ theorem invertible' {s : State} {P : Com} : (eval (P ;; P⁻¹) s) = s := by
     have ⟨σ, _⟩ := ‹∃ σ, eval P s = prog σ›
     have : prog σ ≠ ⊥ := by sorry
     have := (invertible.mp ⟨‹eval P s = prog σ›, ‹prog σ ≠ ⊥›⟩).left
-    rw [← ‹eval P s = prog σ›] at ‹eval P⁻¹ (prog σ) = s›
+    rw [←‹eval P s = prog σ›] at ‹eval P⁻¹ (prog σ) = s›
     assumption
   case inr =>
     match s with
