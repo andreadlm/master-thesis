@@ -27,10 +27,8 @@ def emp : Store := fun _ => []
 def update (x : Ident) (l : List Int) (σ : Store) : Store :=
   fun (y : Ident) => if x = y then l else (σ y)
 
-notation:100 "[" x:100 " ↦ " l:100 "]" s:100 => update x l s
-notation:100 "[" x:100 " ↦ " l:100 "]"       => [x ↦ l] emp
-
-#eval (["z" ↦ [3]] ["y" ↦ [2]] ["x" ↦ [1]]) "x"
+notation:65 "[" x:65 " ↦ " l:65 "]"      => update x l emp
+notation:65 "[" x:65 " ↦ " l:65 "]" s:65 => update x l s
 
 end Store
 
