@@ -32,11 +32,13 @@ notation:65 "[" x:65 " ↦ " l:65 "]" s:65 => update x l s
 
 end Store
 
-inductive State : Type :=
-| prog : Store → State
-| fail
+abbrev State := Option Store
 
-notation "⊥" => State.fail
+namespace State
+
+notation "⊥" => (none : State)
+
+end State
 
 inductive Com : Type
 | SKIP : Com

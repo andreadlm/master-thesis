@@ -55,13 +55,4 @@ lemma update_unchanged_cons {σ : Store} {x : Ident} {v : Int} : (σ x).head? = 
 
 end Store
 
-namespace State
-
-lemma prog_or_bot (s : State) : (∃ (σ : Store), s = prog σ) ∨ s = ⊥ := by
-  cases s
-  case prog σ => left; exact ⟨σ, rfl⟩
-  case fail   => right; rfl
-
-end State
-
 end SCORE
