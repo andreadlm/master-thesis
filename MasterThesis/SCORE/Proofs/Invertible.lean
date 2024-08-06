@@ -54,18 +54,7 @@ lemma invertible_CON {s t : State} {x : Ident} : (eval (CON x) s) = t ∧ t ≠ 
       case left  =>
         rw [eval] at ‹eval (CON x) (prog σ) = t›
         rw [←‹prog ([x ↦ 0 :: σ x] σ) = t›, inv, eval]
-        have : (([x ↦ 0 :: σ x] σ) x).head? = some 0 := by
-          calc
-            (([x ↦ 0 :: σ x] σ) x).head?
-            _ = (0 :: σ x).head? := by simp
-            _ = some 0           := by simp
-        simp only [this]
-        calc
-          prog ([x ↦ (([x ↦ 0 :: σ x] σ) x).tail][x ↦ 0 :: σ x] σ)
-          _ = prog ([x ↦ (([x ↦ 0 :: σ x] σ) x).tail] σ) := by rw [update_shrink]
-          _ = prog ([x ↦ (0 :: σ x).tail] σ)             := by simp
-          _ = prog ([x ↦ σ x] σ)                         := by simp
-          _ = prog σ                                     := by rw [update_unchanged]
+        simp
       case right =>
         by_contra
         simp only [‹prog σ = ⊥›, eval] at ‹eval (CON x) (prog σ) = t›
@@ -87,8 +76,7 @@ lemma invertible_CON {s t : State} {x : Ident} : (eval (CON x) s) = t ∧ t ≠ 
         split at lh
         case h_1 =>
           rw [←‹prog ([x ↦ (σ x).tail] σ) = s›, eval]
-          have : ([x ↦ (σ x).tail] σ) x = (σ x).tail := by simp
-          rw [this, update_shrink, update_unchanged_cons ‹(σ x).head? = some 0›]
+          simp [update_unchanged_cons ‹(σ x).head? = some 0›]
         case h_2 =>
           symm at ‹⊥ = s›
           contradiction
@@ -121,18 +109,7 @@ lemma invertible_DEC {s t : State} {x : Ident} : (eval (DEC x) s) = t ∧ t ≠ 
         split at lh
         case h_1 v _ =>
           rw [inv, ←‹prog ([x ↦ (v - 1) :: (σ x).tail] σ) = t›, eval]
-          have : (([x ↦ (v - 1) :: (σ x).tail] σ) x).head? = some (v - 1) := by
-            calc
-              (([x ↦ ((v - 1) :: (σ x).tail)] σ) x).head?
-              _ = ((v - 1) :: (σ x).tail).head? := by simp
-              _ = some (v - 1)                  := by simp
-          simp only [this, update_shrink]
-          calc
-            prog ([x ↦ (v - 1 + 1) :: (([x ↦ (v - 1) :: (σ x).tail] σ) x).tail] σ)
-            _ = prog ([x ↦ v :: (([x ↦ (v - 1) :: (σ x).tail] σ) x).tail] σ) := by rw [Int.sub_add_cancel]
-            _ = prog ([x ↦ v :: ((v - 1) :: (σ x).tail).tail] σ)              := by simp
-            _ = prog ([x ↦ v :: (σ x).tail] σ)                               := by simp
-            _ = prog σ                                                       := by rw [update_unchanged_cons ‹(σ x).head? = some v›]
+          simp [update_unchanged_cons ‹(σ x).head? = some v›]
         case h_2 =>
           symm at ‹⊥ = t›
           contradiction
@@ -157,16 +134,7 @@ lemma invertible_DEC {s t : State} {x : Ident} : (eval (DEC x) s) = t ∧ t ≠ 
         split at lh
         case h_1 v _ =>
           rw [←‹prog ([x ↦ ((v + 1) :: (σ x).tail)]σ) = s›, eval]
-          have : ([x ↦ ((v + 1) :: (σ x).tail)] σ) x = (v + 1) :: (σ x).tail := by
-            { simp }; rw [this]
-          have : ((v + 1) :: (σ x).tail).head? = some (v + 1) := by
-            { rw [List.head?] }; simp only [this]
-          rw [update_shrink]
-          have : (v + 1 - 1) = v := by
-            { rw [Int.add_sub_cancel] }; rw [this]
-          have : ((v + 1) :: (σ x).tail).tail = (σ x).tail := by
-            { rw [List.tail_cons] }; rw [this]
-          rw [update_unchanged_cons ‹(σ x).head? = some v›]
+          simp [update_unchanged_cons ‹(σ x).head? = some v›]
         case h_2 =>
           symm at ‹⊥ = s›
           contradiction

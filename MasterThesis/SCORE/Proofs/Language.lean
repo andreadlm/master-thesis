@@ -24,12 +24,14 @@ lemma update_same {σ : Store} {x y : Ident} {l : List Int} : x = y → (update 
 lemma update_other {σ : Store} {x y : Ident} {l : List Int} : x ≠ y → (update x l σ) y = σ y := by
   intros; simp only [if_neg ‹x ≠ y›, update]
 
+@[simp]
 lemma update_shrink {σ : Store} {x : Ident} {l₁ l₂ : List Int} : (update x l₂ (update x l₁ σ)) = update x l₂ σ := by
   funext y
   cases eq_or_ne x y with
   | inl /- x = y -/ => simp only [update_same ‹x = y›]
   | inr /- x ≠ y -/ => simp only [update_other ‹x ≠ y›]
 
+@[simp]
 lemma update_unchanged {σ : Store} {x : Ident} : update x (σ x) σ = σ := by
   funext y
   cases eq_or_ne x y with
