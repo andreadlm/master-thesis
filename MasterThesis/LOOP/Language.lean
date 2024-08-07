@@ -49,10 +49,11 @@ inductive Com : Type
 | INC : Ident → Com
 | SEQ : Com → Com → Com
 | FOR : Ident → Com → Com
+deriving BEq
 
 open Com
 
-infixl:80 ";;" => SEQ
+infixr:80 ";;" => SEQ
 
 def comToString (indLv : Nat) (P : Com) : String :=
   let rec ind (indLv : Nat) : String :=
