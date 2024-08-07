@@ -18,6 +18,7 @@ lemma update_other {s : Store} {x y : Ident} {v : Nat} : x ≠ y → (update x v
   apply if_neg
   assumption
 
+@[simp]
 lemma update_no_update {s : Store} {x : Ident} : (update x (s x) s) = s := by
   funext y
   cases eq_or_ne x y with
