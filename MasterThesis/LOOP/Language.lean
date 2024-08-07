@@ -29,10 +29,18 @@ def emp : Store := fun _ => 0
 def update (x : Ident) (v : Nat) (s : Store) : Store :=
   fun (y : Ident) => if x = y then v else (s y)
 
-notation:100 "[" x:100 " ↦ " v:100 "]" s:100 => update x v s -- Migliorare?
-notation:100 "[" x:100 " ↦ " v:100 "]"       => [x ↦ v] emp -- Migliorare?
+notation:65 "[" x:65 " ↦ " v:65 "]"      => update x v emp
+notation:65 "[" x:65 " ↦ " v:65 "]" s:65 => update x v s
 
 end Store
+
+abbrev State := Option Store
+
+namespace State
+
+notation "⊥" => (none : State)
+
+end State
 
 inductive Com : Type
 | SKIP : Com
