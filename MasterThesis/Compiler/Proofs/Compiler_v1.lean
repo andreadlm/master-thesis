@@ -4,66 +4,9 @@ import MasterThesis.LOOP.Proofs.Language
 import MasterThesis.SCORE.Interpreter
 import MasterThesis.LOOP.Interpreter
 import MasterThesis.Compiler.Compiler_v1
-import MasterThesis.Compiler.Commons
+import MasterThesis.Compiler.Proofs.Commons
 
 namespace Compiler
-
-lemma eq_states_update {σ : LOOP.Store} {τ : SCORE.Store} (x : Ident) (v : ℕ) : some σ =ₛ some τ → some ([x ↦ v] σ) =ₛ some ([x ↦ (Int.ofNat v :: τ x)] τ) := by sorry
-
-lemma eq_states_INC {σ : LOOP.Store} {t : SCORE.State} {x : Ident} {v : ℕ}: some ([x ↦ v] σ) =ₛ t → some ([x ↦ (v + 1)] σ) =ₛ SCORE.eval (SCORE.Com.INC x) t := by sorry
-
-/-
-lemma eq_stores_update {σ : LOOP.Store} {τ : SCORE.Store} (x : Ident) (v : ℕ) : σ =ₛ τ → [x ↦ v]σ =ₛ [x ↦ (Int.ofNat v :: τ x)]τ := by
-  intros _ y
-  cases eq_or_ne x y with
-  | inl /- x = y -/ =>
-    have : ([x ↦ (Int.ofNat v :: τ x)]τ) y = Int.ofNat v :: τ x := by
-      { simp [‹x = y›] }; rw [this]
-    have : ([x ↦ v]σ) y = v := by
-      { simp [‹x = y›] }; rw [this]
-    have : (Int.ofNat v :: τ x).head? = Int.ofNat v := by
-      { simp }; rw [this]
-  | inr /- x ≠ y -/ =>
-    have : ([x ↦ v]σ) y = σ y := by
-      { simp [‹x ≠ y›] }; rw [this]
-    have : ([x ↦ (Int.ofNat v :: τ x)]τ) y = τ y := by
-      { simp [‹x ≠ y›] }; rw [this]
-    exact ‹σ=ₛτ› y
-
-
-lemma eq_stores_INC {σ : LOOP.Store} {τ : SCORE.Store} {x : Ident} {v : ℕ}: [x ↦ v]σ =ₛ τ → [x ↦ (v + 1)]σ =ₛ SCORE.eval (INC x) τ := by
-  intros _ y
-  cases eq_or_ne x y with
-  | inl /- x = y -/ =>
-    rw [SCORE.eval]
-    have : ([x ↦ (v + 1)]σ) y = (v + 1) := by
-      { simp [‹x = y›] }; rw [this]
-    have : (τ x).head? = some (Int.ofNat v) := by
-      { rw [← ‹[x ↦ v]σ =ₛ τ› x]
-        have : ([x ↦ v]σ) x = v := by
-          { simp }; rw [this]
-      }; simp only [this]
-    have : ([x ↦ ((Int.ofNat v + 1) :: (τ x).tail)]τ) y = ((Int.ofNat v + 1) :: (τ x).tail) := by
-      { simp [‹x = y›] }; rw [this]
-    have : Int.ofNat (v + 1) = Int.ofNat v + 1 := by
-      { simp }; rw [this]
-    rw [List.head?_cons]
-  | inr /- x ≠ y -/ =>
-    rw [SCORE.eval]
-    have : ([x ↦ (v + 1)]σ) y = σ y := by
-      { simp [‹x ≠ y›] }; rw [this]
-    have : (τ x).head? = some (Int.ofNat v) := by
-      { rw [← ‹[x ↦ v]σ =ₛ τ› x]
-        have : ([x ↦ v]σ) x = v := by
-          { simp }; rw [this]
-      }; simp only [this]
-    have : ([x ↦ ((Int.ofNat v + 1) :: (τ x).tail)]τ) y = τ y := by
-      { simp [‹x ≠ y›] }; rw [this]
-    rw [← ‹[x ↦ v]σ =ₛ τ› y]
-    have : ([x ↦ v]σ) y = σ y := by
-      { simp [‹x ≠ y›] }; rw [this]
-
--/
 
 theorem soundness {s : LOOP.State} {t : SCORE.State} (P : LOOP.Com) : s =ₛ t → (LOOP.eval P s) =ₛ (SCORE.eval (l2s P) t) := by
   intro eqs
