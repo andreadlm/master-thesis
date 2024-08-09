@@ -1,4 +1,5 @@
 import Mathlib.Tactic.Basic
+import Mathlib.Tactic.Linarith
 import MasterThesis.SCORE.Interpreter
 import MasterThesis.LOOP.Interpreter
 import MasterThesis.SCORE.Proofs.Language
@@ -9,9 +10,24 @@ namespace l2s'
 open SCORE Com
 open LOOP Com
 
-lemma for_inc {x y : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} : (σ x).head? = v₁ → (σ y).head? = v₂ → eval (FOR y (INC x)) σ = [x ↦ (v₁ + v₂) :: (σ x).tail] σ := by sorry
+lemma iter_inc {x : Ident} {σ : SCORE.Store} {k : Int} (v : ℕ) : (σ x).head? = some k → (fun τ ↦ SCORE.eval (INC x) τ)^[v] σ = [x ↦ (k + ↑v) :: (σ x).tail] σ := by
+  intro
+  induction v
+  case zero =>
+    simp [Store.update_unchanged_cons ‹(σ x).head? = k›]
+  case succ m ih =>
+    calc
+      (fun τ ↦ SCORE.eval (INC x) τ)^[m + 1] σ
+      _ = eval (INC x) ((fun τ ↦ SCORE.eval (INC x) τ)^[m] σ) := by simp [Nat.add_comm m 1, Function.iterate_add_apply]
+      _ = eval (INC x) ([x ↦ (k + ↑m) :: (σ x).tail] σ)       := by rw [ih]
+      _ = [x ↦ (k + ↑m + 1) :: (σ x).tail] σ                  := by simp [SCORE.eval, ‹(σ x).head? = some k›]
+      _ = [x ↦ (k + ↑(m + 1)) :: (σ x).tail] σ                := by
+        have : k + ↑m + 1 = k + (↑m + 1) := by linarith
+        simp [this]
 
-lemma for_dec {x y : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} : (σ x).head? = v₁ → (σ y).head? = v₂ → eval (FOR y (DEC x)) σ = [x ↦ (v₁ - v₂) :: (σ x).tail] σ := by sorry
+lemma for_inc {x y : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} : (σ x).head? = v₁ → (σ y).head? = v₂ → SCORE.eval (FOR y (INC x)) σ = [x ↦ (v₁ + v₂) :: (σ x).tail] σ := by sorry
+
+lemma for_dec {x y : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} : (σ x).head? = v₁ → (σ y).head? = v₂ → SCORE.eval (FOR y (DEC x)) σ = [x ↦ (v₁ - v₂) :: (σ x).tail] σ := by sorry
 
 lemma ev_invariant {x y ev : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} : x ≠ ev → y ≠ ev → (σ x).head? = v₁ → (σ y).head? = v₂ → (σ ev).head? = some 0 → ∃ (σ' : SCORE.Store), (eval (l2s' ev (ASN x y)) σ = σ' ∧ (σ' ev).head? = some 0) := by
   intros
