@@ -25,8 +25,8 @@ mutual
       | SEQ P Q => (eval Q) (eval P s)
       | FOR x P => match (σ x).head? with
                    | some v => match v with
-                               | Int.ofNat   k => (fun τ => eval  P τ)^[k] s
-                               | Int.negSucc k => (fun τ => evalI P τ)^[k.succ] s
+                               | Int.ofNat   k => (fun t => eval  P t)^[k] s
+                               | Int.negSucc k => (fun t => evalI P t)^[k.succ] s
                    | none   => none
   def evalI (P : Com) (s : State) : State :=
     match s with
@@ -47,8 +47,8 @@ mutual
       | SEQ P Q => (evalI Q) (evalI P s)
       | FOR x P => match (σ x).head? with
                    | some v => match v with
-                               | Int.ofNat   k => (fun τ => evalI P τ)^[k] s
-                               | Int.negSucc k => (fun τ => eval  P τ)^[k.succ] s
+                               | Int.ofNat   k => (fun t => evalI P t)^[k] s
+                               | Int.negSucc k => (fun t => eval  P t)^[k.succ] s
                    | none   => none
 end
 
