@@ -25,6 +25,21 @@ lemma iter_inc {x : Ident} {σ : SCORE.Store} {k : Int} (v : ℕ) : (σ x).head?
         have : k + ↑m + 1 = k + (↑m + 1) := by linarith
         simp [this]
 
+lemma iter_dec {x : Ident} {σ : SCORE.Store} {k : Int} (v : ℕ) : (σ x).head? = some k → (fun τ ↦ SCORE.eval (DEC x) τ)^[v] σ = [x ↦ (k - ↑v) :: (σ x).tail] σ := by
+  intro
+  induction v
+  case zero =>
+    simp [Store.update_unchanged_cons ‹(σ x).head? = k›]
+  case succ m ih =>
+    calc
+      (fun τ ↦ SCORE.eval (DEC x) τ)^[m + 1] σ
+      _ = eval (DEC x) ((fun τ ↦ SCORE.eval (DEC x) τ)^[m] σ) := by simp [Nat.add_comm m 1, Function.iterate_add_apply]
+      _ = eval (DEC x) ([x ↦ (k - ↑m) :: (σ x).tail] σ)       := by rw [ih]
+      _ = [x ↦ (k - ↑m - 1) :: (σ x).tail] σ                  := by simp [SCORE.eval, ‹(σ x).head? = some k›]
+      _ = [x ↦ (k - ↑(m + 1)) :: (σ x).tail] σ                := by
+        have : k - ↑m - 1 = k - (↑m + 1) := by linarith
+        simp [this]
+
 lemma for_inc {x y : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} : (σ x).head? = v₁ → (σ y).head? = v₂ → SCORE.eval (FOR y (INC x)) σ = [x ↦ (v₁ + v₂) :: (σ x).tail] σ := by sorry
 
 lemma for_dec {x y : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} : (σ x).head? = v₁ → (σ y).head? = v₂ → SCORE.eval (FOR y (DEC x)) σ = [x ↦ (v₁ - v₂) :: (σ x).tail] σ := by sorry
