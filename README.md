@@ -5,21 +5,26 @@ University of Turin, master thesis in computer science.
 The full documentation of the project can be read [here](https://andreadlm.github.io/master-thesis/) and is generated automatically from the source `.lean` files.
 
 ## Configuring
+After downloading the project, run
+```shell
+lake update
+```
+to download/update all the dependecies.
 
 ## Building
 To build the project run
-```sh
+```shell
 lake build
 ```
 
 To build the executable run
-```sh
+```shell
 lake build l2s
 ```
 
 ### Building the docs
 To build the documentation run:
-```sh
+```shell
 lake build MasterThesis:docs
 ```
 The root of the built docs will be `.lake/build/doc/index.html`.
@@ -27,12 +32,12 @@ The root of the built docs will be `.lake/build/doc/index.html`.
 ## Running
 To execute the compiler from the command line run:
 
-```sh
+```shell
 lake exe l2s -o <output_file> <input_file>
 ```
 
 or directly, after building the executable:
-```sh
+```shell
 cd .lake\build\bin
 .\l2s -o <output_file> <input_file>
 ```
