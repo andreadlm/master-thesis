@@ -60,7 +60,8 @@ lemma for_inc {x y : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} : (σ x).head? 
         (fun t => SCORE.evalI (INC x) t)^[k + 1] σ
         _ = (fun t => SCORE.eval (DEC x) t)^[k + 1] σ := by simp only [evalI_INC_eq_eval_DEC]
         _ = [x ↦ (v₁ - ↑(k + 1)) :: (σ x).tail] σ     := by exact iter_dec (k + 1) ‹(σ x).head? = some v₁›
-        _ = [x ↦ (v₁ + v₂) :: (σ x).tail] σ           := by sorry
+        _ = [x ↦ (v₁ + v₂) :: (σ x).tail] σ           := by simp [Int.sub_eq_add_neg, Int.negSucc_eq k,
+                                                                  Option.some.inj (Eq.trans ‹(σ y).head? = some v₂›.symm ‹(σ y).head? = some (Int.negSucc k)›)]
   · rw [‹(σ y).head? = some v₂›] at ‹(σ y).head? = none›
     contradiction
 
@@ -84,7 +85,8 @@ lemma for_dec {x y : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} : (σ x).head? 
         (fun t => SCORE.evalI (DEC x) t)^[k + 1] σ
         _ = (fun t => SCORE.eval (INC x) t)^[k + 1] σ := by simp only [evalI_DEC_eq_eval_INC]
         _ = [x ↦ (v₁ + ↑(k + 1)) :: (σ x).tail] σ     := by exact iter_inc (k + 1) ‹(σ x).head? = some v₁›
-        _ = [x ↦ (v₁ - v₂) :: (σ x).tail] σ           := by sorry
+        _ = [x ↦ (v₁ - v₂) :: (σ x).tail] σ           := by simp [Int.sub_eq_add_neg, Int.negSucc_eq k,
+                                                                  Option.some.inj (Eq.trans ‹(σ y).head? = some v₂›.symm ‹(σ y).head? = some (Int.negSucc k)›)]
   · rw [‹(σ y).head? = some v₂›] at ‹(σ y).head? = none›
     contradiction
 
