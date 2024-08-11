@@ -71,6 +71,4 @@ def comToString (indLv : Nat) (P : Com) : String :=
 instance : ToString Com where
   toString := comToString 0
 
-#eval (SEQ (FOR "x" (SEQ (SEQ (ZER "x") (FOR "x" (SEQ (ASN "x" "y") (INC "y")))) (INC "x"))) (ZER "x"))
-
 end LOOP

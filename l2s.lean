@@ -8,7 +8,7 @@ structure Config where
   printHelp  : Bool   := false
 
 def usage : String :=
-"Usage: compile [options] file
+"Usage: l2s [options] file
 Options:
   --help    Display this information
   -o <file> Place the output into <file>"

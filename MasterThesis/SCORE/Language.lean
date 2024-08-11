@@ -71,8 +71,6 @@ def comToString (indLv : Nat) (P : Com) : String :=
 instance : ToString Com where
   toString := comToString 0
 
-#eval (SEQ (FOR "x" (SEQ (SEQ (CON "x") (FOR "x" (SEQ (CON "x") (NOC "y")))) (INC "x"))) (DEC "x"))
-
 def inv (P : Com) : Com :=
   match P with
   | SKIP    => SKIP
