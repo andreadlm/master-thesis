@@ -4,11 +4,13 @@ import MasterThesis.SCORE.Interpreter
 import MasterThesis.LOOP.Interpreter
 import MasterThesis.SCORE.Proofs.Language
 import MasterThesis.Compiler.Compiler_v2
+import MasterThesis.Compiler.Proofs.Commons
 
 namespace l2s'
 
 open SCORE Com
 open LOOP Com
+open PLang
 
 lemma iter_inc {x : Ident} {σ : SCORE.Store} {k : Int} (v : ℕ) : (σ x).head? = some k → (fun t ↦ SCORE.eval (INC x) t)^[v] σ = [x ↦ (k + ↑v) :: (σ x).tail] σ := by
   intro
@@ -59,7 +61,7 @@ lemma for_inc {x y : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} : (σ x).head? 
       calc
         (fun t => SCORE.evalI (INC x) t)^[k + 1] σ
         _ = (fun t => SCORE.eval (DEC x) t)^[k + 1] σ := by simp only [evalI_INC_eq_eval_DEC]
-        _ = [x ↦ (v₁ - ↑(k + 1)) :: (σ x).tail] σ     := by exact iter_dec (k + 1) ‹(σ x).head? = some v₁›
+        _ = [x ↦ (v₁ - ↑(k + 1)) :: (σ x).tail] σ     := iter_dec (k + 1) ‹(σ x).head? = some v₁›
         _ = [x ↦ (v₁ + v₂) :: (σ x).tail] σ           := by simp [Int.sub_eq_add_neg, Int.negSucc_eq k,
                                                                   Option.some.inj (Eq.trans ‹(σ y).head? = some v₂›.symm ‹(σ y).head? = some (Int.negSucc k)›)]
   · rw [‹(σ y).head? = some v₂›] at ‹(σ y).head? = none›
@@ -84,14 +86,16 @@ lemma for_dec {x y : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} : (σ x).head? 
       calc
         (fun t => SCORE.evalI (DEC x) t)^[k + 1] σ
         _ = (fun t => SCORE.eval (INC x) t)^[k + 1] σ := by simp only [evalI_DEC_eq_eval_INC]
-        _ = [x ↦ (v₁ + ↑(k + 1)) :: (σ x).tail] σ     := by exact iter_inc (k + 1) ‹(σ x).head? = some v₁›
+        _ = [x ↦ (v₁ + ↑(k + 1)) :: (σ x).tail] σ     := iter_inc (k + 1) ‹(σ x).head? = some v₁›
         _ = [x ↦ (v₁ - v₂) :: (σ x).tail] σ           := by simp [Int.sub_eq_add_neg, Int.negSucc_eq k,
                                                                   Option.some.inj (Eq.trans ‹(σ y).head? = some v₂›.symm ‹(σ y).head? = some (Int.negSucc k)›)]
   · rw [‹(σ y).head? = some v₂›] at ‹(σ y).head? = none›
     contradiction
 
-lemma ev_invariant {x y ev : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} : x ≠ ev → y ≠ ev → (σ x).head? = v₁ → (σ y).head? = v₂ → (σ ev).head? = some 0 → ∃ (σ' : SCORE.Store), (eval (l2s' ev (ASN x y)) σ = σ' ∧ (σ' ev).head? = some 0) := by
+lemma ev_invariant {x y ev : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} (h : ev ∉ idents (ASN x y)) : (σ x).head? = v₁ → (σ y).head? = v₂ → (σ ev).head? = some 0 → ∃ (σ' : SCORE.Store), (eval (l2s' ev (ASN x y)) σ = σ' ∧ (σ' ev).head? = some 0) := by
   intros
+  have : x ≠ ev := sorry
+  have : y ≠ ev := sorry
   repeat constructor
   · rw [l2s']
     calc
@@ -108,3 +112,29 @@ lemma ev_invariant {x y ev : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} : x ≠
         have head_ev : (([x ↦ v₂ :: σ x] [ev ↦ v₂ :: (σ ev).tail] σ) ev).head? = v₂ := by simp [‹x ≠ ev›]
         simp [SCORE.eval, for_dec head_ev head_x, ‹x ≠ ev›]
   · simp
+
+-- (Finset.not_mem_union.mp h).left
+theorem soundness {s : LOOP.State} {t : SCORE.State} {ev : Ident} (P : LOOP.Com) : ev ∉ idents P → s =[P]ₛ t → (LOOP.eval P s) =[P]ₛ (SCORE.eval (l2s' ev P) t) := by
+  intros h_ev eqs
+  induction P
+  all_goals (cases s <;> cases t)
+  case SKIP.some.some =>
+    rwa [LOOP.eval, l2s', SCORE.eval]
+  case ZER.some.some x σ τ =>
+    rw [LOOP.eval, l2s', SCORE.eval]
+    intros y _
+    have : y = x := by simpa [idents, LOOPcomIdents] using ‹y ∈ idents (LOOP.Com.ZER x)›
+    simp [‹y = x›]
+  case ASN.some.some x y σ τ => sorry
+  case INC.some.some x σ τ =>
+    rw [LOOP.eval, l2s', SCORE.eval]
+    split
+    · intros y _
+      have : y = x := by simpa [idents, LOOPcomIdents] using ‹y ∈ idents (LOOP.Com.INC x)›
+      simpa [←‹y = x›, ←‹σ =[LOOP.Com.INC x]ₛ τ› y ‹y ∈ idents (LOOP.Com.INC x)›] using ‹(τ x).head? = some _›
+    · have : x ∈ idents (LOOP.Com.INC x) := by sorry
+      rw [←‹some σ =[LOOP.Com.INC x]ₛ some τ› x ‹x ∈ idents (LOOP.Com.INC x)›] at ‹(τ x).head? = none›
+      contradiction
+  case SEQ.some.some LQ LR ih₁ ih₂ σ τ => sorry
+  case FOR.some.some x LQ ih σ τ => sorry
+  all_goals (simp only [eq_states_idents] at eqs)
