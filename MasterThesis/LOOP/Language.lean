@@ -51,7 +51,7 @@ inductive Com : Type
 | FOR : Ident → Com → Com
 deriving BEq
 
-open Com
+namespace Com
 
 infixr:80 ";;" => SEQ
 
@@ -70,5 +70,7 @@ def comToString (indLv : Nat) (P : Com) : String :=
 
 instance : ToString Com where
   toString := comToString 0
+
+end Com
 
 end LOOP

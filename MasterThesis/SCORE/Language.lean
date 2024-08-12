@@ -50,7 +50,7 @@ inductive Com : Type
 | FOR  : Ident → Com → Com
 deriving BEq
 
-open Com
+namespace Com
 
 infixr:80 ";;" => SEQ
 
@@ -82,5 +82,7 @@ def inv (P : Com) : Com :=
   | FOR x Q => FOR x (inv Q)
 
 postfix:max "⁻¹" => inv
+
+end Com
 
 end SCORE
