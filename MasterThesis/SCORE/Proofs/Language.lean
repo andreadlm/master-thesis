@@ -4,6 +4,8 @@ import MasterThesis.SCORE.Language
 
 namespace SCORE
 
+open SCORE Com
+
 theorem inv_inv (P : Com) : (inv (inv P)) = P := by
   induction  P
   case SKIP        => simp[inv]
