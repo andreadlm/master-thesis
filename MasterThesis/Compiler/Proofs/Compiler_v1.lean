@@ -41,8 +41,7 @@ theorem soundness {s : LOOP.State} {t : SCORE.State} (P : LOOP.Com) : s =ₛ t �
       cases eq_or_ne x y
       · simpa [‹x = y›, ←‹σ =ₛ τ› y] using ‹(τ x).head? = some _›
       · simpa [‹x ≠ y›] using ‹σ =ₛ τ› y
-    · rw [←‹some σ =ₛ some τ› x] at ‹(τ x).head? = none›
-      contradiction
+    · simp [←‹some σ =ₛ some τ› x] at ‹(τ x).head? = none›
   case SEQ.some.some LQ LR ih₁ ih₂ σ τ =>
     rw [LOOP.eval, l2s, SCORE.eval]
     exact ih₂ (ih₁ ‹σ =ₛ τ›)
@@ -56,8 +55,7 @@ theorem soundness {s : LOOP.State} {t : SCORE.State} (P : LOOP.Com) : s =ₛ t �
         simpa
       case succ _ ih₂ =>
         exact ih₂ (LOOP.eval LQ s) (SCORE.eval (l2s LQ) t) (ih ‹s =ₛ t›)
-    · rw [←‹some σ =ₛ some τ› x] at ‹(τ x).head? = none›
-      contradiction
+    · simp [←‹some σ =ₛ some τ› x] at ‹(τ x).head? = none›
   all_goals (simp only [eq_states] at eqs)
 
 end Compiler
