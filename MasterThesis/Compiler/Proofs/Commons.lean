@@ -1,5 +1,6 @@
 import Mathlib.Tactic.Basic
 import MasterThesis.SCORE.Interpreter
+import MasterThesis.LOOP.Interpreter
 import MasterThesis.SCORE.Proofs.Language
 import MasterThesis.LOOP.Proofs.Language
 import MasterThesis.Compiler.Commons
@@ -22,3 +23,5 @@ lemma eq_states_INC {σ : LOOP.Store} {t : SCORE.State} {x : Ident} {v : ℕ} : 
     · simpa [‹x ≠ y›] using ‹some ([x ↦ v] σ) =ₛ some τ› y
   case none =>
     contradiction
+
+lemma eq_states_idents_subs {s : LOOP.State} {t : SCORE.State} {a b : Finset Ident} : s =[a ∪ b]ₛ t → s =[a]ₛ t := by sorry

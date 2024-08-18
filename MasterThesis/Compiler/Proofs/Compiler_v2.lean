@@ -10,7 +10,6 @@ namespace l2s'
 
 open SCORE Com
 open LOOP Com
-open PLang
 
 lemma iter_inc {x : Ident} {σ : SCORE.Store} {k : Int} (v : ℕ) : (σ x).head? = some k → (fun t ↦ SCORE.eval (INC x) t)^[v] σ = [x ↦ (k + ↑v) :: (σ x).tail] σ := by
   intro
@@ -92,13 +91,15 @@ lemma for_dec {x y : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} : (σ x).head? 
   · rw [‹(σ y).head? = some v₂›] at ‹(σ y).head? = none›
     contradiction
 
-lemma ev_invariant {x y ev : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} (h : ev ∉ idents (ASN x y)) : (σ x).head? = v₁ → (σ y).head? = v₂ → (σ ev).head? = some 0 → ∃ (σ' : SCORE.Store), (eval (l2s' ev (ASN x y)) σ = σ' ∧ (σ' ev).head? = some 0) := by
+lemma ev_invariant {x y ev : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} (h : ev ∉ (ASN x y).ids) : (σ x).head? = v₁ → (σ y).head? = v₂ → ∃ (σ' : SCORE.Store), (eval (l2s' ev (ASN x y)) σ = σ' ∧ (σ' ev).head? = some 0) := by
   intros
   have : x ≠ ev := sorry
   have : y ≠ ev := sorry
   repeat constructor
+  repeat sorry
+  /-
   · rw [l2s']
-    calc
+    /- calc
       eval (l2s' ev (ASN x y)) σ
       _ = eval (FOR y (INC ev);; CON x;; FOR ev (INC x);; FOR x (DEC ev)) σ                    := by simp [l2s']
       _ = eval (CON x;; FOR ev (INC x);; FOR x (DEC ev)) ([ev ↦ v₂ :: (σ ev).tail] σ)          := by simp [SCORE.eval, for_inc ‹(σ ev).head? = some 0› ‹(σ y).head? = v₂›]
@@ -110,31 +111,65 @@ lemma ev_invariant {x y ev : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} (h : ev
       _ = [ev ↦ 0 :: (σ ev).tail] [x ↦ (v₂ :: σ x)] [ev ↦ v₂ :: (σ ev).tail] σ                 := by
         have head_x : (([x ↦ v₂ :: σ x] [ev ↦ v₂ :: (σ ev).tail] σ) x).head? = v₂ := by simp
         have head_ev : (([x ↦ v₂ :: σ x] [ev ↦ v₂ :: (σ ev).tail] σ) ev).head? = v₂ := by simp [‹x ≠ ev›]
-        simp [SCORE.eval, for_dec head_ev head_x, ‹x ≠ ev›]
+        simp [SCORE.eval, for_dec head_ev head_x, ‹x ≠ ev› -/
   · simp
+  -/
 
--- (Finset.not_mem_union.mp h).left
-theorem soundness {s : LOOP.State} {t : SCORE.State} {ev : Ident} (P : LOOP.Com) : ev ∉ idents P → s =[P]ₛ t → (LOOP.eval P s) =[P]ₛ (SCORE.eval (l2s' ev P) t) := by
+theorem soundness_ext {s : LOOP.State} {t : SCORE.State} {ev : Ident} {ext : Finset Ident} (P : LOOP.Com) : ev ∉ (P.ids ∪ ext) → s =[P.ids ∪ ext]ₛ t → (LOOP.eval P s) =[P.ids ∪ ext]ₛ (SCORE.eval (l2s' ev P) t) := by
   intros h_ev eqs
-  induction P
-  all_goals (cases s <;> cases t)
+  induction P generalizing s t ext
+  all_goals (cases s <;> cases t <;> rw [LOOP.Com.ids] at *)
   case SKIP.some.some =>
     rwa [LOOP.eval, l2s', SCORE.eval]
   case ZER.some.some x σ τ =>
     rw [LOOP.eval, l2s', SCORE.eval]
-    intros y _
-    have : y = x := by simpa [idents, LOOPcomIdents] using ‹y ∈ idents (LOOP.Com.ZER x)›
-    simp [‹y = x›]
-  case ASN.some.some x y σ τ => sorry
+    intro y
+    cases eq_or_ne x y
+    · simp [‹x = y›]
+    · simpa [‹x ≠ y›] using ‹σ =[{x} ∪ ext]ₛ τ› y
+  case ASN.some.some x y σ τ =>
+    sorry
   case INC.some.some x σ τ =>
     rw [LOOP.eval, l2s', SCORE.eval]
     split
-    · intros y _
-      have : y = x := by simpa [idents, LOOPcomIdents] using ‹y ∈ idents (LOOP.Com.INC x)›
-      simpa [←‹y = x›, ←‹σ =[LOOP.Com.INC x]ₛ τ› y ‹y ∈ idents (LOOP.Com.INC x)›] using ‹(τ x).head? = some _›
-    · have : x ∈ idents (LOOP.Com.INC x) := by sorry
-      rw [←‹some σ =[LOOP.Com.INC x]ₛ some τ› x ‹x ∈ idents (LOOP.Com.INC x)›] at ‹(τ x).head? = none›
-      contradiction
-  case SEQ.some.some LQ LR ih₁ ih₂ σ τ => sorry
-  case FOR.some.some x LQ ih σ τ => sorry
+    · intro y
+      cases eq_or_ne x y
+      · simpa [‹x = y›, ←‹σ =[{x} ∪ ext]ₛ τ› y] using ‹(τ x).head? = some _›
+      · simpa [‹x ≠ y›] using ‹σ =[{x} ∪ ext]ₛ τ› y
+    · simp [←‹σ =[{x} ∪ ext]ₛ τ› x] at ‹(τ x).head? = none›
+  case SEQ.some.some LQ LR ih₁ ih₂ σ τ =>
+    have : LQ.ids ∪ LR.ids ∪ ext = LQ.ids ∪ (LR.ids ∪ ext) := by rw [Finset.union_assoc]
+    have : LQ.ids ∪ LR.ids ∪ ext = LR.ids ∪ (LQ.ids ∪ ext) := by rw [Finset.union_comm LQ.ids LR.ids, Finset.union_assoc]
+    have : LQ.ids ∪ (LR.ids ∪ ext) = LR.ids ∪ (LQ.ids ∪ ext) := by rw [←Finset.union_assoc, Finset.union_comm LQ.ids LR.ids, Finset.union_assoc]
+    rw [LOOP.eval, l2s', SCORE.eval, ‹LQ.ids ∪ LR.ids ∪ ext = LR.ids ∪ (LQ.ids ∪ ext)›]
+    have : ev ∉ LQ.ids ∪ (LR.ids ∪ ext) := by
+      simpa [‹LQ.ids ∪ LR.ids ∪ ext = LQ.ids ∪ (LR.ids ∪ ext)›] using ‹ev ∉ LQ.ids ∪ LR.ids ∪ ext›
+    have : σ =[LQ.ids ∪ (LR.ids ∪ ext)]ₛ τ := by
+      simpa [‹LQ.ids ∪ LR.ids ∪ ext = LQ.ids ∪ (LR.ids ∪ ext)›] using ‹σ =[LQ.ids ∪ LR.ids ∪ ext]ₛ τ›
+    have : (LOOP.eval LQ (some σ)) =[LR.ids ∪ (LQ.ids ∪ ext)]ₛ (SCORE.eval (l2s' ev LQ) (some τ)) := by
+      simpa [‹LQ.ids ∪ (LR.ids ∪ ext) = LR.ids ∪ (LQ.ids ∪ ext)›] using ih₁ ‹ev ∉ LQ.ids ∪ (LR.ids ∪ ext)› ‹σ =[LQ.ids ∪ (LR.ids ∪ ext)]ₛ τ›
+    have : ev ∉ LR.ids ∪ (LQ.ids ∪ ext) := by
+      simpa [‹LQ.ids ∪ LR.ids ∪ ext = LR.ids ∪ (LQ.ids ∪ ext)›] using ‹ev ∉ LQ.ids ∪ LR.ids ∪ ext›
+    exact ih₂ ‹ev ∉ LR.ids ∪ (LQ.ids ∪ ext)› ‹(LOOP.eval LQ (some σ)) =[LR.ids ∪ (LQ.ids ∪ ext)]ₛ (SCORE.eval (l2s' ev LQ) (some τ))›
+  case FOR.some.some x LQ ih σ τ =>
+    rw [LOOP.eval, l2s', SCORE.eval]
+    split
+    · have : x ∈ {x} ∪ LQ.ids ∪ ext := Finset.mem_union_left ext (Finset.mem_union_left LQ.ids (Finset.mem_singleton_self x))
+      simp only [←(Option.some_inj.mp (Eq.trans (‹σ =[{x} ∪ LQ.ids ∪ ext]ₛ τ› x ‹x ∈ {x} ∪ LQ.ids ∪ ext›) ‹(τ x).head? = some _›))]
+      generalize some σ = s, some τ = t at ‹σ =[{x} ∪ LQ.ids ∪ ext]ₛ τ›
+      induction σ x generalizing s t
+      case zero =>
+        simpa using ‹s =[{x} ∪ LQ.ids ∪ ext]ₛ t›
+      case succ _ ih₂ =>
+        have : {x} ∪ LQ.ids ∪ ext = LQ.ids ∪ ({x} ∪ ext) := by
+          rw [←Finset.union_assoc, Finset.union_comm LQ.ids {x}, Finset.union_assoc]
+        rw [‹{x} ∪ LQ.ids ∪ ext = LQ.ids ∪ ({x} ∪ ext)›] at ‹s =[{x} ∪ LQ.ids ∪ ext]ₛ t› ‹ev ∉ {x} ∪ LQ.ids ∪ ext›
+        have : LOOP.eval LQ s =[{x} ∪ LQ.ids ∪ ext]ₛ SCORE.eval (l2s' ev LQ) t := by
+          simpa [‹{x} ∪ LQ.ids ∪ ext = LQ.ids ∪ ({x} ∪ ext)›] using ih ‹ev ∉ LQ.ids ∪ ({x} ∪ ext)› ‹s =[LQ.ids ∪ ({x} ∪ ext)]ₛ t›
+        exact ih₂ (LOOP.eval LQ s) (SCORE.eval (l2s' ev LQ) t) ‹LOOP.eval LQ s =[{x} ∪ LQ.ids ∪ ext]ₛ SCORE.eval (l2s' ev LQ) t›
+    · simp [←‹σ =[{x} ∪ LQ.ids ∪ ext]ₛ τ› x] at ‹(τ x).head? = none›
   all_goals (simp only [eq_states_idents] at eqs)
+
+theorem soundness {s : LOOP.State} {t : SCORE.State} {ev : Ident} (P : LOOP.Com) : ev ∉ P.ids → s =[P.ids]ₛ t → (LOOP.eval P s) =[P.ids]ₛ (SCORE.eval (l2s' ev P) t) := by
+  rw [←Finset.union_empty P.ids]
+  exact soundness_ext P
