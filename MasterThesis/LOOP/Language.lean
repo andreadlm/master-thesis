@@ -8,10 +8,8 @@ import MasterThesis.Commons
 /-!
 # LOOP language
 
-This file defines LOOP, a simple imperative programming language developed by Meyer and Ritchie that
-precisely captures the primitive recursive functions.
-
-## Implementation notes
+This file defines LOOP, a simple imperative nonreversible programming language that precisely
+captures all the primitive recursive functions.
 
 ## References
 
@@ -20,12 +18,16 @@ See [MeyerRitchieLoop] for the original account on LOOP language.
 
 namespace LOOP
 
+/-- A `Store` provides an abstract representation of memory in the form of a total function from
+`Ident` to `Nat`. -/
 def Store : Type := Ident → Nat
 
 namespace Store
 
+/-- An empty `Store` maps every identifier to zero. -/
 def emp : Store := fun _ => 0
 
+/-- Updates a `Store` by mapping the register identified by `x` to a new value `v`. -/
 def update (σ : Store) (x : Ident) (v : Nat) : Store :=
   fun (y : Ident) => if x = y then v else (σ y)
 
@@ -42,6 +44,9 @@ notation "⊥" => (none : State)
 
 end State
 
+/-- A LOOP program is a sequence of commands chosen from skip, clearing a register, incrementing a
+register, copying one register to another, composing two commands, and iterating over a finite
+number of steps. -/
 inductive Com : Type
 | SKIP : Com
 | ZER  : Ident → Com
@@ -55,6 +60,7 @@ namespace Com
 
 infixr:80 ";;" => SEQ
 
+/-- Computes the string representation of a LOOP command. -/
 def comToString (indLv : Nat) (P : Com) : String :=
   let rec ind (indLv : Nat) : String :=
     match indLv with
