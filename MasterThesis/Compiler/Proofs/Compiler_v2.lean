@@ -11,7 +11,7 @@ namespace l2s'
 open SCORE Com
 open LOOP Com
 
-lemma iter_inc {x : Ident} {σ : SCORE.Store} {k : Int} (v : ℕ) : (σ x).head? = some k → (fun t ↦ SCORE.eval (INC x) t)^[v] σ = [x ↦ (k + ↑v) :: (σ x).tail] σ := by
+lemma iter_inc {x : Ident} {σ : SCORE.Store} {k : Int} (v : ℕ) : (σ x).head? = k → (fun t ↦ SCORE.eval (INC x) t)^[v] σ = σ[x ↦ (k + ↑v) :: (σ x).tail] := by
   intro
   induction v
   case zero =>
@@ -20,13 +20,13 @@ lemma iter_inc {x : Ident} {σ : SCORE.Store} {k : Int} (v : ℕ) : (σ x).head?
     calc
       (fun t => SCORE.eval (INC x) t)^[m + 1] σ
       _ = eval (INC x) ((fun t => SCORE.eval (INC x) t)^[m] σ) := by simp [Nat.add_comm m 1, Function.iterate_add_apply]
-      _ = eval (INC x) ([x ↦ (k + ↑m) :: (σ x).tail] σ)       := by rw [ih]
-      _ = [x ↦ (k + ↑m + 1) :: (σ x).tail] σ                  := by simp [SCORE.eval, ‹(σ x).head? = some k›]
-      _ = [x ↦ (k + ↑(m + 1)) :: (σ x).tail] σ                := by
+      _ = eval (INC x) (σ[x ↦ (k + ↑m) :: (σ x).tail])         := by rw [ih]
+      _ = σ[x ↦ (k + ↑m + 1) :: (σ x).tail]                    := by simp [SCORE.eval, ‹(σ x).head? = k›]
+      _ = σ[x ↦ (k + ↑(m + 1)) :: (σ x).tail]                  := by
         have : k + ↑m + 1 = k + (↑m + 1) := by linarith
         simp [this]
 
-lemma iter_dec {x : Ident} {σ : SCORE.Store} {k : Int} (v : ℕ) : (σ x).head? = some k → (fun t ↦ SCORE.eval (DEC x) t)^[v] σ = [x ↦ (k - ↑v) :: (σ x).tail] σ := by
+lemma iter_dec {x : Ident} {σ : SCORE.Store} {k : Int} (v : ℕ) : (σ x).head? = k → (fun t ↦ SCORE.eval (DEC x) t)^[v] σ = σ[x ↦ (k - ↑v) :: (σ x).tail] := by
   intro
   induction v
   case zero =>
@@ -35,13 +35,13 @@ lemma iter_dec {x : Ident} {σ : SCORE.Store} {k : Int} (v : ℕ) : (σ x).head?
     calc
       (fun t => SCORE.eval (DEC x) t)^[m + 1] σ
       _ = eval (DEC x) ((fun t => SCORE.eval (DEC x) t)^[m] σ) := by simp [Nat.add_comm m 1, Function.iterate_add_apply]
-      _ = eval (DEC x) ([x ↦ (k - ↑m) :: (σ x).tail] σ)       := by rw [ih]
-      _ = [x ↦ (k - ↑m - 1) :: (σ x).tail] σ                  := by simp [SCORE.eval, ‹(σ x).head? = some k›]
-      _ = [x ↦ (k - ↑(m + 1)) :: (σ x).tail] σ                := by
+      _ = eval (DEC x) (σ[x ↦ (k - ↑m) :: (σ x).tail])         := by rw [ih]
+      _ = σ[x ↦ (k - ↑m - 1) :: (σ x).tail]                    := by simp [SCORE.eval, ‹(σ x).head? = k›]
+      _ = σ[x ↦ (k - ↑(m + 1)) :: (σ x).tail]                  := by
         have : k - ↑m - 1 = k - (↑m + 1) := by linarith
         simp [this]
 
-lemma for_inc {x y : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} : (σ x).head? = v₁ → (σ y).head? = v₂ → SCORE.eval (FOR y (INC x)) σ = [x ↦ (v₁ + v₂) :: (σ x).tail] σ := by
+lemma for_inc {x y : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} : (σ x).head? = v₁ → (σ y).head? = v₂ → SCORE.eval (FOR y (INC x)) σ = σ[x ↦ (v₁ + v₂) :: (σ x).tail] := by
   intros
   rw [SCORE.eval]
   split
@@ -49,24 +49,24 @@ lemma for_inc {x y : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} : (σ x).head? 
     case _ k _ =>
       calc
         (fun t => SCORE.eval (INC x) t)^[k] σ
-        _ = [x ↦ (v₁ + ↑k) :: (σ x).tail] σ := iter_inc k ‹(σ x).head? = some v₁›
-        _ = [x ↦ (v₁ + v₂) :: (σ x).tail] σ := by simp [Option.some.inj (Eq.trans ‹(σ y).head? = some v₂›.symm ‹(σ y).head? = some (Int.ofNat k)›)]
+        _ = σ[x ↦ (v₁ + ↑k) :: (σ x).tail] := iter_inc k ‹(σ x).head? = v₁›
+        _ = σ[x ↦ (v₁ + v₂) :: (σ x).tail] := by simp [Option.some.inj (Eq.trans ‹(σ y).head? = v₂›.symm ‹(σ y).head? = Int.ofNat k›)]
     case _ k _ =>
       have evalI_INC_eq_eval_DEC {x : Ident} {s : SCORE.State} : evalI (INC x) s = eval (DEC x) s := by
         cases Option.eq_none_or_eq_some s
         · rw [‹s = none›, SCORE.evalI, SCORE.eval]
         · cases ‹∃ x, s = some x› with
-          | intro σ _ => rw [‹s = some σ›, SCORE.evalI, SCORE.eval]
+          | intro σ _ => rw [‹s = σ›, SCORE.evalI, SCORE.eval]
       calc
         (fun t => SCORE.evalI (INC x) t)^[k + 1] σ
         _ = (fun t => SCORE.eval (DEC x) t)^[k + 1] σ := by simp only [evalI_INC_eq_eval_DEC]
-        _ = [x ↦ (v₁ - ↑(k + 1)) :: (σ x).tail] σ     := iter_dec (k + 1) ‹(σ x).head? = some v₁›
-        _ = [x ↦ (v₁ + v₂) :: (σ x).tail] σ           := by simp [Int.sub_eq_add_neg, Int.negSucc_eq k,
-                                                                  Option.some.inj (Eq.trans ‹(σ y).head? = some v₂›.symm ‹(σ y).head? = some (Int.negSucc k)›)]
-  · rw [‹(σ y).head? = some v₂›] at ‹(σ y).head? = none›
+        _ = σ[x ↦ (v₁ - ↑(k + 1)) :: (σ x).tail]      := iter_dec (k + 1) ‹(σ x).head? = v₁›
+        _ = σ[x ↦ (v₁ + v₂) :: (σ x).tail]            := by simp [Int.sub_eq_add_neg, Int.negSucc_eq k,
+                                                                  Option.some.inj (Eq.trans ‹(σ y).head? = v₂›.symm ‹(σ y).head? = Int.negSucc k›)]
+  · rw [‹(σ y).head? = v₂›] at ‹(σ y).head? = none›
     contradiction
 
-lemma for_dec {x y : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} : (σ x).head? = v₁ → (σ y).head? = v₂ → SCORE.eval (FOR y (DEC x)) σ = [x ↦ (v₁ - v₂) :: (σ x).tail] σ := by
+lemma for_dec {x y : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} : (σ x).head? = v₁ → (σ y).head? = v₂ → SCORE.eval (FOR y (DEC x)) σ = σ[x ↦ (v₁ - v₂) :: (σ x).tail] := by
   intros
   rw [SCORE.eval]
   split
@@ -74,21 +74,21 @@ lemma for_dec {x y : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} : (σ x).head? 
     case _ k _ =>
       calc
         (fun t => SCORE.eval (DEC x) t)^[k] σ
-        _ = [x ↦ (v₁ - ↑k) :: (σ x).tail] σ := iter_dec k ‹(σ x).head? = some v₁›
-        _ = [x ↦ (v₁ - v₂) :: (σ x).tail] σ := by simp [Option.some.inj (Eq.trans ‹(σ y).head? = some v₂›.symm ‹(σ y).head? = some (Int.ofNat k)›)]
+        _ = σ[x ↦ (v₁ - ↑k) :: (σ x).tail] := iter_dec k ‹(σ x).head? = v₁›
+        _ = σ[x ↦ (v₁ - v₂) :: (σ x).tail] := by simp [Option.some.inj (Eq.trans ‹(σ y).head? = v₂›.symm ‹(σ y).head? = Int.ofNat k›)]
     case _ k _ =>
       have evalI_DEC_eq_eval_INC {x : Ident} {s : SCORE.State} : evalI (DEC x) s = eval (INC x) s := by
         cases Option.eq_none_or_eq_some s
         · rw [‹s = none›, SCORE.evalI, SCORE.eval]
         · cases ‹∃ x, s = some x› with
-          | intro σ _ => rw [‹s = some σ›, SCORE.evalI, SCORE.eval]
+          | intro σ _ => rw [‹s = σ›, SCORE.evalI, SCORE.eval]
       calc
         (fun t => SCORE.evalI (DEC x) t)^[k + 1] σ
         _ = (fun t => SCORE.eval (INC x) t)^[k + 1] σ := by simp only [evalI_DEC_eq_eval_INC]
-        _ = [x ↦ (v₁ + ↑(k + 1)) :: (σ x).tail] σ     := iter_inc (k + 1) ‹(σ x).head? = some v₁›
-        _ = [x ↦ (v₁ - v₂) :: (σ x).tail] σ           := by simp [Int.sub_eq_add_neg, Int.negSucc_eq k,
-                                                                  Option.some.inj (Eq.trans ‹(σ y).head? = some v₂›.symm ‹(σ y).head? = some (Int.negSucc k)›)]
-  · rw [‹(σ y).head? = some v₂›] at ‹(σ y).head? = none›
+        _ = σ[x ↦ (v₁ + ↑(k + 1)) :: (σ x).tail]      := iter_inc (k + 1) ‹(σ x).head? = v₁›
+        _ = σ[x ↦ (v₁ - v₂) :: (σ x).tail]            := by simp [Int.sub_eq_add_neg, Int.negSucc_eq k,
+                                                                  Option.some.inj (Eq.trans ‹(σ y).head? = v₂›.symm ‹(σ y).head? = Int.negSucc k›)]
+  · rw [‹(σ y).head? = v₂›] at ‹(σ y).head? = none›
     contradiction
 
 lemma ev_invariant {x y ev : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} (h : ev ∉ (ASN x y).ids) : (σ x).head? = v₁ → (σ y).head? = v₂ → ∃ (σ' : SCORE.Store), (eval (l2s' ev (ASN x y)) σ = σ' ∧ (σ' ev).head? = some 0) := by

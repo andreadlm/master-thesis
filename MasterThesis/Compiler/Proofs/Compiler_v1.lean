@@ -25,7 +25,7 @@ theorem soundness {s : LOOP.State} {t : SCORE.State} (P : LOOP.Com) : s =ₛ t �
     cases eq_or_ne x y
     · rw [l2s]
       simpa [‹x = y›, SCORE.eval]
-    · have : SCORE.eval (l2s (LOOP.Com.ASN x y)) (some τ) = (fun τ ↦ SCORE.eval (SCORE.Com.INC x) τ)^[σ y] (some ([x ↦ 0 :: τ x] τ)) := by
+    · have : SCORE.eval (l2s (LOOP.Com.ASN x y)) (some τ) = (fun τ ↦ SCORE.eval (SCORE.Com.INC x) τ)^[σ y] (some (τ[x ↦ 0 :: τ x])) := by
         rw [l2s]
         simp [‹x ≠ y›, SCORE.eval, ←(‹σ =ₛ τ› y)]
       rw [this]; clear this

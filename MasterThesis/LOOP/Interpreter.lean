@@ -12,9 +12,9 @@ def eval (P : Com) (s : State) : State :=
   | some σ =>
     match P with
     | SKIP    => some σ
-    | ZER x   => some ([x ↦ 0] σ)
-    | ASN x y => some ([x ↦ (σ y)] σ)
-    | INC x   => some ([x ↦ ((σ x) + 1)] σ)
+    | ZER x   => some (σ[x ↦ 0])
+    | ASN x y => some (σ[x ↦ (σ y)])
+    | INC x   => some (σ[x ↦ ((σ x) + 1)])
     | SEQ P Q => (eval Q) (eval P σ)
     | FOR x P => (fun σ' => (eval P σ'))^[σ x] σ
 

@@ -24,11 +24,11 @@ namespace Store
 
 def emp : Store := fun _ => []
 
-def update (x : Ident) (l : List Int) (σ : Store) : Store :=
+def update (σ : Store) (x : Ident) (l : List Int) : Store :=
   fun (y : Ident) => if x = y then l else (σ y)
 
-notation:65 "[" x:65 " ↦ " l:65 "]"      => update x l emp
-notation:65 "[" x:65 " ↦ " l:65 "]" s:65 => update x l s
+notation:65 "[" x:65 " ↦ " l:65 "]"      => update emp x l
+notation:65 σ:65 "[" x:65 " ↦ " l:65 "]" => update σ x l
 
 end Store
 

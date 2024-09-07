@@ -53,7 +53,7 @@ lemma invertible_CON {s t : State} {x : Ident} : (eval (CON x) s) = t ∧ t ≠ 
       constructor
       case left  =>
         rw [eval] at ‹eval (CON x) (some σ) = t›
-        rw [←‹some ([x ↦ 0 :: σ x] σ) = t›, inv, eval]
+        rw [←‹some (σ[x ↦ 0 :: σ x]) = t›, inv, eval]
         simp
       case right =>
         by_contra
@@ -75,7 +75,7 @@ lemma invertible_CON {s t : State} {x : Ident} : (eval (CON x) s) = t ∧ t ≠ 
         rw [inv, eval] at ‹eval (CON x)⁻¹ (some σ) = s›
         split at lh
         case h_1 =>
-          rw [←‹some ([x ↦ (σ x).tail] σ) = s›, eval]
+          rw [←‹some (σ[x ↦ (σ x).tail]) = s›, eval]
           simp [update_unchanged_cons ‹(σ x).head? = some 0›]
         case h_2 =>
           symm at ‹⊥ = s›
@@ -108,7 +108,7 @@ lemma invertible_DEC {s t : State} {x : Ident} : (eval (DEC x) s) = t ∧ t ≠ 
         rw [eval] at ‹eval (DEC x) (some σ) = t›
         split at lh
         case h_1 v _ =>
-          rw [inv, ←‹some ([x ↦ (v - 1) :: (σ x).tail] σ) = t›, eval]
+          rw [inv, ←‹some (σ[x ↦ (v - 1) :: (σ x).tail]) = t›, eval]
           simp [update_unchanged_cons ‹(σ x).head? = some v›]
         case h_2 =>
           symm at ‹⊥ = t›
@@ -133,7 +133,7 @@ lemma invertible_DEC {s t : State} {x : Ident} : (eval (DEC x) s) = t ∧ t ≠ 
         rw [inv, eval] at ‹eval (DEC x)⁻¹ (some σ) = s›
         split at lh
         case h_1 v _ =>
-          rw [←‹some ([x ↦ ((v + 1) :: (σ x).tail)]σ) = s›, eval]
+          rw [←‹some (σ[x ↦ ((v + 1) :: (σ x).tail)]) = s›, eval]
           simp [update_unchanged_cons ‹(σ x).head? = some v›]
         case h_2 =>
           symm at ‹⊥ = s›
@@ -200,29 +200,3 @@ theorem invertible {s t : State} {P : Com} : (eval P s) = t ∧ t ≠ ⊥ ↔ (e
   case INC         => exact invertible_INC
   case SEQ ih₁ ih₂ => exact invertible_SEQ ih₁ ih₂
   case FOR x P     => sorry
-
-/- Definizione di invertible data per il linguaggio SCORE privo di stati di errore.
-  La condizione è dimostrabile per mezzo di invertible nel caso in cui non si verifichino errori,
-  nel caso di situazioni di errore però non risulta essere adatta. I sorry da dimostrare sono "banali".
-  
-theorem invertible' {s : State} {P : Com} : (eval (P ;; P⁻¹) s) = s := by
-  have : (eval (P ;; P⁻¹) s) = eval P⁻¹ (eval P s) := by
-    { sorry }; rw [this]
-  have := some_or_bot (eval P s)
-  cases ‹(∃ σ, eval P s = some σ) ∨ eval P s = ⊥›
-  case inl =>
-    have ⟨σ, _⟩ := ‹∃ σ, eval P s = some σ›
-    have : some σ ≠ ⊥ := by sorry
-    have := (invertible.mp ⟨‹eval P s = some σ›, ‹some σ ≠ ⊥›⟩).left
-    rw [←‹eval P s = some σ›] at ‹eval P⁻¹ (some σ) = s›
-    assumption
-  case inr =>
-    match s with
-    | some σ =>
-      rw [‹eval P (some σ) = ⊥›, eval]
-      sorry -- Impossibile che ⊥ = some σ
-    | ⊥      =>
-      rw [eval]
-      have : eval P⁻¹ ⊥ = ⊥ := by
-        { sorry }; rw [this]
--/
