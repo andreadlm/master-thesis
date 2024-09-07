@@ -80,9 +80,10 @@ mutual
   partial def pFOR := do
     lexeme <| skipString "LOOP"
     let i ← lexeme <| var
+    lexeme <| skipString "DO"
     newline
     let body ← pCom
     newline
     lexeme <| skipString "END"
-    return Com.FOR i body
+    return Com.LOOP i body
 end

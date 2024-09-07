@@ -8,17 +8,17 @@ open LOOP LOOP.Com
    {x = a, y = b, z = 0}
 -/
 def sum : Com :=
-  FOR "x" (INC "z") ;;
-  FOR "y" (INC "z")
+  LOOP "x" (INC "z") ;;
+  LOOP "y" (INC "z")
 -- {x = a, y = b, z = a + b}
 
 /- Predecessore di un numero
    {x = ?, y = a, z = 0}
 -/
 def pred : Com :=
-  FOR "y" (
+  LOOP "y" (
     ZER "x" ;;
-    FOR "z" (INC "x") ;;
+    LOOP "z" (INC "x") ;;
     INC "z"
   )
 -- {x = a - 1, y = a, z = a}

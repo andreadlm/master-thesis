@@ -151,7 +151,7 @@ theorem soundness_ext {s : LOOP.State} {t : SCORE.State} {ev : Ident} {ext : Fin
     have : ev ∉ LR.ids ∪ (LQ.ids ∪ ext) := by
       simpa [‹LQ.ids ∪ LR.ids ∪ ext = LR.ids ∪ (LQ.ids ∪ ext)›] using ‹ev ∉ LQ.ids ∪ LR.ids ∪ ext›
     exact ih₂ ‹ev ∉ LR.ids ∪ (LQ.ids ∪ ext)› ‹(LOOP.eval LQ (some σ)) =[LR.ids ∪ (LQ.ids ∪ ext)]ₛ (SCORE.eval (l2s' ev LQ) (some τ))›
-  case FOR.some.some x LQ ih σ τ =>
+  case LOOP.some.some x LQ ih σ τ =>
     rw [LOOP.eval, l2s', SCORE.eval]
     split
     · have : x ∈ {x} ∪ LQ.ids ∪ ext := Finset.mem_union_left ext (Finset.mem_union_left LQ.ids (Finset.mem_singleton_self x))

@@ -1,16 +1,19 @@
 import MasterThesis.SCORE.Language
 import MasterThesis.LOOP.Language
 
+open LOOP Com
+open SCORE Com
+
 def l2s' (ev : Ident) (P : LOOP.Com) : SCORE.Com :=
   match P with
-  | LOOP.Com.SKIP    => SCORE.Com.SKIP
-  | LOOP.Com.ZER x   => SCORE.Com.CON x
-  | LOOP.Com.ASN x y => SCORE.Com.CON ev;;
-                        SCORE.Com.FOR y (SCORE.Com.INC ev);;
-                        SCORE.Com.CON x;;
-                        SCORE.Com.FOR ev (SCORE.Com.INC x);;
-                        SCORE.Com.FOR x (SCORE.Com.DEC ev)
-  | LOOP.Com.INC x   => SCORE.Com.INC x
-  | LOOP.Com.SEQ P Q => l2s' ev P;;
-                        l2s' ev Q
-  | LOOP.Com.FOR x P => SCORE.Com.FOR x (l2s' ev P)
+  | .SKIP     => SKIP
+  | .ZER x    => CON x
+  | .ASN x y  => CON ev;;
+                  FOR y (INC ev);;
+                  CON x;;
+                  FOR ev (INC x);;
+                  FOR x (DEC ev)
+  | .INC x    => INC x
+  | .SEQ P Q  => l2s' ev P;;
+                 l2s' ev Q
+  | .LOOP x P => FOR x (l2s' ev P)

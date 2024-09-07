@@ -44,11 +44,11 @@ end State
 
 inductive Com : Type
 | SKIP : Com
-| ZER : Ident → Com
-| ASN : Ident → Ident → Com
-| INC : Ident → Com
-| SEQ : Com → Com → Com
-| FOR : Ident → Com → Com
+| ZER  : Ident → Com
+| ASN  : Ident → Ident → Com
+| INC  : Ident → Com
+| SEQ  : Com → Com → Com
+| LOOP : Ident → Com → Com
 deriving BEq
 
 namespace Com
@@ -61,12 +61,12 @@ def comToString (indLv : Nat) (P : Com) : String :=
     | .zero   => ""
     | .succ m => "  " ++ ind m
   match P with
-  | SKIP    => s!"{ind indLv}SKIP"
-  | ZER x   => s!"{ind indLv}{x} = 0"
-  | ASN x y => s!"{ind indLv}{x} = {y}"
-  | INC x   => s!"{ind indLv}{x} += 1"
-  | SEQ P Q => s!"{comToString indLv P}\n{comToString indLv Q}"
-  | FOR x P => s!"{ind indLv}LOOP {x}\n{comToString (indLv + 1) P}\n{ind indLv}END"
+  | SKIP     => s!"{ind indLv}SKIP"
+  | ZER x    => s!"{ind indLv}{x} = 0"
+  | ASN x y  => s!"{ind indLv}{x} = {y}"
+  | INC x    => s!"{ind indLv}{x} += 1"
+  | SEQ P Q  => s!"{comToString indLv P}\n{comToString indLv Q}"
+  | LOOP x P => s!"{ind indLv}LOOP {x} DO\n{comToString (indLv + 1) P}\n{ind indLv}END"
 
 instance : ToString Com where
   toString := comToString 0

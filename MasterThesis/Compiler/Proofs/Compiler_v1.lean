@@ -45,7 +45,7 @@ theorem soundness {s : LOOP.State} {t : SCORE.State} (P : LOOP.Com) : s =ₛ t �
   case SEQ.some.some LQ LR ih₁ ih₂ σ τ =>
     rw [LOOP.eval, l2s, SCORE.eval]
     exact ih₂ (ih₁ ‹σ =ₛ τ›)
-  case FOR.some.some x LQ ih σ τ =>
+  case LOOP.some.some x LQ ih σ τ =>
     rw [LOOP.eval, l2s, SCORE.eval]
     split
     · simp only [←(Option.some_inj.mp (Eq.trans (‹σ =ₛ τ› x) ‹(τ x).head? = some _›))]

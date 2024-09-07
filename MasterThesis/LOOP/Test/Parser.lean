@@ -16,7 +16,7 @@ def test1 : String :=
 "x = 0
 x += 1
 y = x
-LOOP y
+LOOP y DO
   x += 1
 END"
 
@@ -24,7 +24,7 @@ def expected1 : LOOP.Com :=
   ZER "x";;
   INC "x";;
   ASN "y" "x";;
-  FOR "y" (
+  LOOP "y" (
     INC "x"
   )
 
@@ -36,7 +36,7 @@ def test2 : String :=
 x = 0
 y = 0
 x += 1
-LOOP x
+LOOP x DO
   y = x
 END
 
@@ -46,7 +46,7 @@ def expected2 : LOOP.Com :=
   ZER "x";;
   ZER "y";;
   INC "x";;
-  FOR "x" (
+  LOOP "x" (
     ASN "y" "x"
   )
 
@@ -57,7 +57,7 @@ def test3 : String :=
 x = 0
 y = 0
 x += 1
-LOOP x
+LOOP x DO
   y = 0
   y += 1
   y = x
@@ -68,7 +68,7 @@ def expected3 : LOOP.Com :=
   ZER "x";;
   ZER "y";;
   INC "x";;
-  FOR "x" (
+  LOOP "x" (
     ZER "y";;
     INC "y";;
     ASN "y" "x"
@@ -81,8 +81,8 @@ def test4 : String :=
 x = 0
 y = 0
 x += 1
-LOOP x
-  LOOP y
+LOOP x DO
+  LOOP y DO
     x += 1
   END
 END
@@ -92,8 +92,8 @@ def expected4 : LOOP.Com :=
   ZER "x";;
   ZER "y";;
   INC "x";;
-  FOR "x" (
-    FOR "y" (
+  LOOP "x" (
+    LOOP "y" (
       INC "x"
     )
   )
@@ -108,7 +108,7 @@ def test5 : String :=
 
 x += 1
 
-  LOOP x
+  LOOP x DO
       y = x
     END
 "
@@ -117,7 +117,7 @@ def expected5 : LOOP.Com :=
   ZER "x";;
   ZER "y";;
   INC "x";;
-  FOR "x" (
+  LOOP "x" (
     ASN "y" "x"
   )
 

@@ -20,13 +20,13 @@ namespace SCORE.Com
 
 def ids (P : SCORE.Com) : Finset Ident :=
   match P with
-  | SCORE.Com.SKIP    => {}
-  | SCORE.Com.CON x   => {x}
-  | SCORE.Com.NOC x   => {x}
-  | SCORE.Com.DEC x   => {x}
-  | SCORE.Com.INC x   => {x}
-  | SCORE.Com.SEQ P Q => ids P ∪ ids Q
-  | SCORE.Com.FOR x P => {x} ∪ ids P
+  | SKIP    => {}
+  | CON x   => {x}
+  | NOC x   => {x}
+  | DEC x   => {x}
+  | INC x   => {x}
+  | SEQ P Q => ids P ∪ ids Q
+  | FOR x P => {x} ∪ ids P
 
 end SCORE.Com
 
@@ -34,11 +34,11 @@ namespace LOOP.Com
 
 def ids (P : LOOP.Com) : Finset Ident :=
   match P with
-  | LOOP.Com.SKIP    => {}
-  | LOOP.Com.ZER x   => {x}
-  | LOOP.Com.ASN x y => {x, y}
-  | LOOP.Com.INC x   => {x}
-  | LOOP.Com.SEQ P Q => ids P ∪ ids Q
-  | LOOP.Com.FOR x P => {x} ∪ ids P
+  | SKIP     => {}
+  | ZER x    => {x}
+  | ASN x y  => {x, y}
+  | INC x    => {x}
+  | SEQ P Q  => ids P ∪ ids Q
+  | LOOP x P => {x} ∪ ids P
 
 end LOOP.Com
