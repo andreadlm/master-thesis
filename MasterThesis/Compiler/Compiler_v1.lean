@@ -11,12 +11,12 @@ def l2s (Lc : LOOP.Com) : SCORE.Com :=
   | .SKIP     => SKIP
   | .ZER x    => CON x
   | .ASN x y  => if x ≠ y then
-                  CON x ;;
+                  CON x;;
                   FOR y (INC x)
-                else SKIP
+                 else SKIP
   | .INC x    => INC x
-  | .SEQ P Q  => l2s P ;;
-                l2s Q
+  | .SEQ P Q  => l2s P;;
+                 l2s Q
   | .LOOP x P => FOR x (l2s P)
 
 end Compiler

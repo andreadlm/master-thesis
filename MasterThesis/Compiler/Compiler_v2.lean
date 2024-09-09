@@ -9,10 +9,10 @@ def l2s' (ev : Ident) (P : LOOP.Com) : SCORE.Com :=
   | .SKIP     => SKIP
   | .ZER x    => CON x
   | .ASN x y  => CON ev;;
-                  FOR y (INC ev);;
-                  CON x;;
-                  FOR ev (INC x);;
-                  FOR x (DEC ev)
+                 FOR y (INC ev);;
+                 CON x;;
+                 FOR ev (INC x);;
+                 FOR x (DEC ev)
   | .INC x    => INC x
   | .SEQ P Q  => l2s' ev P;;
                  l2s' ev Q
