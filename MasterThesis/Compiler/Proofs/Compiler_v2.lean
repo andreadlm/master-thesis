@@ -1,8 +1,7 @@
 import Mathlib.Tactic.Basic
 import Mathlib.Tactic.Linarith
-import MasterThesis.SCORE.Interpreter
-import MasterThesis.LOOP.Interpreter
-import MasterThesis.SCORE.Proofs.Language
+import MasterThesis.LOOP.Language
+import MasterThesis.SCORE.Language
 import MasterThesis.Compiler.Compiler_v2
 import MasterThesis.Compiler.Proofs.Commons
 
@@ -119,24 +118,33 @@ theorem soundness_ext {s : LOOP.State} {t : SCORE.State} {ev : Ident} {ext : Fin
   intros h_ev eqs
   induction P generalizing s t ext
   all_goals (cases s <;> cases t <;> rw [LOOP.Com.ids] at *)
-  case SKIP.some.some =>
-    rwa [LOOP.eval, l2s', SCORE.eval]
+  case SKIP.some.some σ τ =>
+    simp only [LOOP.eval, l2s', SCORE.eval]
+    intros y _
+    cases eq_or_ne y ev
+    · rw [‹y = ev›] at ‹y ∈ ∅ ∪ ext›
+      contradiction
+    · simpa [‹y ≠ ev›.symm] using (‹σ =[∅ ∪ ext]ₛ τ› y ‹y ∈ ∅ ∪ ext›)
   case ZER.some.some x σ τ =>
-    rw [LOOP.eval, l2s', SCORE.eval]
-    intro y
-    cases eq_or_ne x y
-    · simp [‹x = y›]
-    · simpa [‹x ≠ y›] using ‹σ =[{x} ∪ ext]ₛ τ› y
+    simp only [LOOP.eval, l2s', SCORE.eval]
+    intros y _
+    cases eq_or_ne x y <;> cases eq_or_ne y ev
+    case inr.inr => simpa [‹x ≠ y›, ‹y ≠ ev›.symm] using (‹σ =[{x} ∪ ext]ₛ τ› y ‹y ∈ {x} ∪ ext›)
+    case inr.inl => rw [‹y = ev›] at ‹y ∈ {x} ∪ ext›
+                    contradiction
+    all_goals simp [‹x = y›]
   case ASN.some.some x y σ τ =>
     sorry
   case INC.some.some x σ τ =>
-    rw [LOOP.eval, l2s', SCORE.eval]
+    simp only [LOOP.eval, l2s', SCORE.eval]
+    have : ev ≠ x := by sorry
     split
-    · intro y
-      cases eq_or_ne x y
-      · simpa [‹x = y›, ←‹σ =[{x} ∪ ext]ₛ τ› y] using ‹(τ x).head? = some _›
-      · simpa [‹x ≠ y›] using ‹σ =[{x} ∪ ext]ₛ τ› y
-    · simp [←‹σ =[{x} ∪ ext]ₛ τ› x] at ‹(τ x).head? = none›
+    · intros y _
+      cases eq_or_ne x y <;> cases eq_or_ne y ev
+      case inr.inr => simpa [‹x ≠ y›, ‹y ≠ ev›.symm] using (‹σ =[{x} ∪ ext]ₛ τ› y ‹y ∈ {x} ∪ ext›)
+      case inl.inr => simpa [‹x = y›, ‹y ≠ ev›.symm, ←‹σ =[{x} ∪ ext]ₛ τ› y] using ‹((τ[ev ↦ 0 :: τ ev]) x).head? = some _›
+      all_goals (rw [‹y = ev›] at ‹y ∈ {x} ∪ ext›; contradiction)
+    · simp [‹ev ≠ x› , ←‹σ =[{x} ∪ ext]ₛ τ› x] at ‹((τ[ev ↦ 0 :: τ ev]) x).head? = none›
   case SEQ.some.some LQ LR ih₁ ih₂ σ τ =>
     have : LQ.ids ∪ LR.ids ∪ ext = LQ.ids ∪ (LR.ids ∪ ext) := by rw [Finset.union_assoc]
     have : LQ.ids ∪ LR.ids ∪ ext = LR.ids ∪ (LQ.ids ∪ ext) := by rw [Finset.union_comm LQ.ids LR.ids, Finset.union_assoc]

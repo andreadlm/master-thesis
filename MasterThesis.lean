@@ -1,7 +1,5 @@
 import MasterThesis.Commons
 import MasterThesis.SCORE.Language
-import MasterThesis.SCORE.Interpreter
-import MasterThesis.SCORE.Proofs.Language
 import MasterThesis.SCORE.Proofs.Invertible
 import MasterThesis.LOOP.Language
 import MasterThesis.LOOP.Parser

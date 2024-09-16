@@ -1,5 +1,4 @@
-import MasterThesis.SCORE.Proofs.Language
-import MasterThesis.SCORE.Interpreter
+import MasterThesis.SCORE.Language
 
 open SCORE Com Store State
 
