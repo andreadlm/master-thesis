@@ -2,7 +2,6 @@ import Mathlib.Tactic.Basic
 import MasterThesis.SCORE.Interpreter
 import MasterThesis.LOOP.Language
 import MasterThesis.SCORE.Proofs.Language
-import MasterThesis.LOOP.Proofs.Language
 import MasterThesis.Compiler.Commons
 
 lemma eq_states_update {σ : LOOP.Store} {τ : SCORE.Store} (x : Ident) (v : ℕ) : some σ =ₛ some τ → some (σ[x ↦ v]) =ₛ some (τ[x ↦ ↑v :: τ x]) := by
