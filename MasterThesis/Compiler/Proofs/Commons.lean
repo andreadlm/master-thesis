@@ -1,6 +1,6 @@
 import Mathlib.Tactic.Basic
 import MasterThesis.SCORE.Interpreter
-import MasterThesis.LOOP.Interpreter
+import MasterThesis.LOOP.Language
 import MasterThesis.SCORE.Proofs.Language
 import MasterThesis.LOOP.Proofs.Language
 import MasterThesis.Compiler.Commons
