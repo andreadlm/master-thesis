@@ -112,8 +112,8 @@ def comToString (indLv : Nat) (P : Com) : String :=
   | NOC x   => s!"{ind indLv}NOC {x}"
   | DEC x   => s!"{ind indLv}DEC {x}"
   | INC x   => s!"{ind indLv}INC {x}"
-  | SEQ P Q => s!"{comToString indLv P}\n{comToString indLv Q}"
-  | FOR x P => s!"{ind indLv}FOR {x}\n{comToString (indLv + 1) P}"
+  | SEQ P Q => s!"{comToString indLv P};\n{comToString indLv Q}"
+  | FOR x P => s!"{ind indLv}FOR {x} \{\n{comToString (indLv + 1) P}\n{ind indLv}}"
 
 instance : ToString Com where
   toString := comToString 0
