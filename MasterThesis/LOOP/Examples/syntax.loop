@@ -1,7 +1,7 @@
-x = 0
+x = 0;
 LOOP y      
-  x += 1       
-  z = 0
+  x += 1;       
+  z = 0;
   LOOP x
     x = z
   END
