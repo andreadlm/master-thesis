@@ -15,7 +15,7 @@ The accepted syntax for a loop program is defined as follows:
 $$
 \begin{array}{lclcl}
     \texttt{Ident} & \ni & x, y &     & \\
-    \texttt{Com}   & \ni & P, Q & ::= & \texttt{SKIP} \mid x \; \texttt{=} \; \texttt{0} \mid x \; \texttt{=} \; y \mid x \; \texttt{=} \; x \; \texttt{+} \; \texttt{1}\\
+    \texttt{Com}   & \ni & P, Q & ::= & \texttt{SKIP} \mid x \; \texttt{=} \; \texttt{0} \mid x \; \texttt{=} \; y \mid x \; \texttt{=} \; x \; \texttt{+} \; \texttt{1} \\
                    &     &      &     & \mid P \texttt{;} Q \mid \texttt{LOOP} \; x \; \texttt{DO} \; P \; \texttt{END}
 \end{array}
 $$
