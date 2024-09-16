@@ -13,9 +13,9 @@ def test_parser {α : Type} [BEq α] (name : String) (parser : Lean.Parsec α) (
                   else failure_msg
 
 def test1 : String :=
-"x = 0
-x += 1
-y = x
+"x = 0;
+x += 1;
+y = x;
 LOOP y DO
   x += 1
 END"
@@ -33,9 +33,9 @@ def expected1 : LOOP.Com :=
 def test2 : String :=
 "
 
-x = 0
-y = 0
-x += 1
+x = 0;
+y = 0;
+x += 1;
 LOOP x DO
   y = x
 END
@@ -54,12 +54,12 @@ def expected2 : LOOP.Com :=
 
 def test3 : String :=
 "
-x = 0
-y = 0
-x += 1
+x = 0;
+y = 0;
+x += 1;
 LOOP x DO
-  y = 0
-  y += 1
+  y = 0;
+  y += 1;
   y = x
 END
 "
@@ -78,9 +78,9 @@ def expected3 : LOOP.Com :=
 
 def test4 : String :=
 "
-x = 0
-y = 0
-x += 1
+x = 0;
+y = 0;
+x += 1;
 LOOP x DO
   LOOP y DO
     x += 1
@@ -102,11 +102,11 @@ def expected4 : LOOP.Com :=
 
 def test5 : String :=
 "
-  x = 0
+  x = 0;
 
-    y = 0
+    y = 0;
 
-x += 1
+x += 1;
 
   LOOP x DO
       y = x
@@ -124,10 +124,24 @@ def expected5 : LOOP.Com :=
 #eval test_parser "Whitespaces around instructions" parse test5 expected5 false
 
 def test6 : String :=
-"x = 0 y = 0"
+"x = 0; y = 0"
 
 def expected6 : LOOP.Com :=
   ZER "x";;
   ZER "y"
 
-#eval test_parser "Multiple instructions on same row" parse test6 expected6 true
+#eval test_parser "Multiple instructions on same row" parse test6 expected6 false
+
+def test7 : String :=
+"LOOP x DO
+  x = 0; y = 0
+END; x += 1"
+
+def expected7 : LOOP.Com :=
+  LOOP "x" (
+    ZER "x";;
+    ZER "y"
+  );;
+  INC "x"
+
+#eval test_parser "Multiple instructions on same row complex" parse test7 expected7 false
