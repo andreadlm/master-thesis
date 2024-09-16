@@ -1,8 +1,9 @@
 /-
 "A LEAN-certified reversibilization of Meyer-Ritchie LOOP language".
 Master thesis in computer science, University of Turin.
-Authors: Andrea Delmastro
+Author: Andrea Delmastro
 -/
+import Mathlib.Logic.Function.Iterate
 import MasterThesis.Commons
 
 /-!
@@ -11,9 +12,16 @@ import MasterThesis.Commons
 This file defines LOOP, a simple imperative nonreversible programming language that precisely
 captures all the primitive recursive functions.
 
+## Implementation notes
+
+A LOOP `State` is defined as an `Option Store` to provide a uniform structure for both LOOP and
+SCORE states, simplifying the management of the notion of equivalence. The term `none` can be
+interpreted as the failure state, even though this is not defined in the language specifications,
+nor is meaningful.
+
 ## References
 
-See [MeyerRitchieLoop] for the original account on LOOP language.
+See [MeyerRitchie:Loop] for the original account on LOOP language.
 -/
 
 namespace LOOP
@@ -36,6 +44,7 @@ notation:65 σ:65 "[" x:65 " ↦ " v:65 "]" => update σ x v
 
 end Store
 
+/-- A `State` can be a `Store` or a failure. -/
 abbrev State := Option Store
 
 namespace State
@@ -78,5 +87,19 @@ instance : ToString Com where
   toString := comToString 0
 
 end Com
+
+/-- Interpreter for LOOP. The interpreter takes as input a `Com` and an evaluation `State` and
+outputs the resulting `State` obtained by applying the command to the initial state. -/
+def eval (P : Com) (s : State) : State :=
+  match s with
+  | ⊥      => ⊥
+  | some σ =>
+    match P with
+    | .SKIP     => σ
+    | .ZER x    => σ[x ↦ 0]
+    | .ASN x y  => σ[x ↦ (σ y)]
+    | .INC x    => σ[x ↦ ((σ x) + 1)]
+    | .SEQ P Q  => (eval Q) (eval P σ)
+    | .LOOP x P => (fun σ' => (eval P σ'))^[σ x] σ
 
 end LOOP
