@@ -13,9 +13,10 @@ This file defines LOOP, a simple imperative nonreversible programming language t
 captures all the primitive recursive functions.
 
 ## Notations
-* `[x ↦ v]` stands for `update emp x v` where `emp` is the empty state (_set the value of`x` to `v`in `emp`_)
-* `σ[x ↦ v]` stands for `update σ x v` (_set the value of `x` to `v` in `σ`_)
 
+* `[x ↦ v]` stands for `update emp x v` where `emp` is the empty `State` (_set the value of `x` to `v`in `emp`_).
+* `σ[x ↦ v]` stands for `update σ x v` (_set the value of `x` to `v` in `σ`_).
+Consecutive updates can be concatenated as `σ[x ↦ v₁][x ↦ v₂]`.
 
 ## Implementation notes
 
@@ -37,6 +38,8 @@ def Store : Type := Ident → Nat
 
 namespace Store
 
+/-! ### Declarations about `Store` -/
+
 /-- An empty `Store` maps every identifier to zero. -/
 def emp : Store := fun _ => 0
 
@@ -47,12 +50,35 @@ def update (σ : Store) (x : Ident) (v : Nat) : Store :=
 notation:65 "[" x:65 " ↦ " v:65 "]"      => update emp x v
 notation:65 σ:65 "[" x:65 " ↦ " v:65 "]" => update σ x v
 
+/-- If `x = y` then the current value of `y` in `σ[x ↦ v]` is `v`. -/
+@[simp] lemma update_same {σ : Store} {x y : Ident} {v : Nat} : x = y → (σ[x ↦ v]) y = v := by
+  intros
+  unfold update
+  apply if_pos
+  assumption
+
+/-- If `x ≠ y` then the current value of `y` in `σ[x ↦ v]` is `σ y`. -/
+@[simp] lemma update_other {σ : Store} {x y : Ident} {v : Nat} : x ≠ y → (σ[x ↦ v]) y = σ y := by
+  intros
+  unfold update
+  apply if_neg
+  assumption
+
+/-- Updating a variable to its current value produces no change. -/
+@[simp] lemma update_no_update {σ : Store} {x : Ident} : (σ[x ↦ (σ x)]) = σ := by
+  funext y
+  cases eq_or_ne x y with
+  | inl /- x = y -/ => rw[update_same ‹x = y›, ‹x = y›]
+  | inr /- x ≠ y -/ => rw[update_other ‹x ≠ y›]
+
 end Store
 
 /-- A `State` can be a `Store` or a failure. -/
 abbrev State := Option Store
 
 namespace State
+
+/-! ### Declarations about `State` -/
 
 notation "⊥" => (none : State)
 
@@ -71,6 +97,8 @@ inductive Com : Type
 deriving BEq
 
 namespace Com
+
+/-! ### Declarations about `Com` -/
 
 infixr:80 ";;" => SEQ
 
