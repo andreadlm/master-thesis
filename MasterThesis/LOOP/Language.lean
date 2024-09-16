@@ -12,6 +12,11 @@ import MasterThesis.Commons
 This file defines LOOP, a simple imperative nonreversible programming language that precisely
 captures all the primitive recursive functions.
 
+## Notations
+* `[x ↦ v]` stands for `update emp x v` where `emp` is the empty state (_set the value of`x` to `v`in `emp`_)
+* `σ[x ↦ v]` stands for `update σ x v` (_set the value of `x` to `v` in `σ`_)
+
+
 ## Implementation notes
 
 A LOOP `State` is defined as an `Option Store` to provide a uniform structure for both LOOP and
