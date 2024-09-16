@@ -1,8 +1,8 @@
 x = 0;
-LOOP y      
+LOOP y DO     
   x += 1;       
   z = 0;
-  LOOP x
+  LOOP x DO
     x = z
   END
 END
