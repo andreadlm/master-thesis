@@ -8,7 +8,7 @@ open LOOP LOOP.Com
    {x = a, y = b, z = 0}
 -/
 def sum : Com :=
-  LOOP "x" (INC "z") ;;
+  LOOP "x" (INC "z");;
   LOOP "y" (INC "z")
 -- {x = a, y = b, z = a + b}
 
@@ -17,8 +17,8 @@ def sum : Com :=
 -/
 def pred : Com :=
   LOOP "y" (
-    ZER "x" ;;
-    LOOP "z" (INC "x") ;;
+    ZER "x";;
+    LOOP "z" (INC "x");;
     INC "z"
   )
 -- {x = a - 1, y = a, z = a}
