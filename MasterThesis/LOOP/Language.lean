@@ -14,8 +14,9 @@ captures all the primitive recursive functions.
 
 ## Notations
 
-* `[x ↦ v]` stands for `update emp x v` where `emp` is the empty `State` (_set the value of `x` to `v`in `emp`_).
-* `σ[x ↦ v]` stands for `update σ x v` (_set the value of `x` to `v` in `σ`_).
+* `[x ↦ v]` stands for `update emp x v` where `emp` is the empty `State` (_set the value of_ `x` _to_ `v` _in_ `emp`).
+* `σ[x ↦ v]` stands for `update σ x v` (_set the value of_ `x` _to_ `v` _in_ `σ`).
+
 Consecutive updates can be concatenated as `σ[x ↦ v₁][x ↦ v₂]`.
 
 ## Implementation notes
@@ -37,8 +38,6 @@ namespace LOOP
 def Store : Type := Ident → Nat
 
 namespace Store
-
-/-! ### Declarations about `Store` -/
 
 /-- An empty `Store` maps every identifier to zero. -/
 def emp : Store := fun _ => 0
@@ -78,8 +77,6 @@ abbrev State := Option Store
 
 namespace State
 
-/-! ### Declarations about `State` -/
-
 notation "⊥" => (none : State)
 
 end State
@@ -97,8 +94,6 @@ inductive Com : Type
 deriving BEq
 
 namespace Com
-
-/-! ### Declarations about `Com` -/
 
 infixr:80 ";;" => SEQ
 
