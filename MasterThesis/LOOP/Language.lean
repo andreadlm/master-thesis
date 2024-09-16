@@ -14,7 +14,7 @@ captures all the primitive recursive functions.
 
 ## Notations
 
-* `[x ↦ v]` stands for `update emp x v` where `emp` is the empty `State` (_set the value of_ `x` _to_ `v` _in_ `emp`).
+* `[x ↦ v]` stands for `update emp x v` where `emp` is the empty `Store` (_set the value of_ `x` _to_ `v` _in_ `emp`).
 * `σ[x ↦ v]` stands for `update σ x v` (_set the value of_ `x` _to_ `v` _in_ `σ`).
 
 Consecutive updates can be concatenated as `σ[x ↦ v₁][x ↦ v₂]`.

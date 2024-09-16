@@ -20,6 +20,8 @@ $$
 \end{array}
 $$
 
+Some example programs can be found in the Examples folder.
+
 ## References
 
 This work is strongly based on the following resources:
