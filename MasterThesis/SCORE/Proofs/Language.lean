@@ -27,33 +27,24 @@ lemma update_other {σ : Store} {x y : Ident} {l : List Int} : x ≠ y → (σ[x
   intros; simp only [if_neg ‹x ≠ y›, update]
 
 @[simp]
-lemma update_shrink {σ : Store} {x : Ident} {l₁ l₂ : List Int} : σ[x ↦ l₁][x ↦ l₂] = σ[x ↦ l₂] := by
-  funext y
-  cases eq_or_ne x y with
-  | inl /- x = y -/ => simp only [update_same ‹x = y›]
-  | inr /- x ≠ y -/ => simp only [update_other ‹x ≠ y›]
-
-@[simp]
 lemma update_unchanged {σ : Store} {x : Ident} : σ[x ↦ (σ x)] = σ := by
   funext y
   cases eq_or_ne x y with
   | inl /- x = y -/ => rewrite [‹x = y›]; simp only [update_same]
   | inr /- x ≠ y -/ => simp only [update_other ‹x ≠ y›]
 
-lemma update_unchanged_cons {σ : Store} {x : Ident} {v : Int} : (σ x).head? = v → σ[x ↦ (v :: (σ x).tail)]= σ := by
-  intro
+@[simp]
+lemma update_shrink {σ : Store} {x : Ident} {l₁ l₂ : List Int} : σ[x ↦ l₁][x ↦ l₂] = σ[x ↦ l₂] := by
   funext y
   cases eq_or_ne x y with
-  | inl /- x = y-/ =>
-    rw [← ‹x = y›]
-    have : (σ[x ↦ (v :: (σ x).tail)]) x = (v :: (σ x).tail) := by
-      { simp [‹x = y›]}; rw [this]
-    have : v ∈ (σ x).head? := by
-      { rw [Option.mem_def]; assumption }
-    exact List.cons_head?_tail ‹v ∈ (σ x).head?›
-  | inr /- x ≠ y-/ =>
-    have : (σ[x ↦ (v :: (σ x).tail)]) y = σ y := by
-      { simp [‹x ≠ y›] }; rw [this]
+  | inl /- x = y -/ => simp only [update_same ‹x = y›]
+  | inr /- x ≠ y -/ => simp only [update_other ‹x ≠ y›]
+
+lemma update_unchanged_cons {σ : Store} {x : Ident} {v : Int} : (σ x).head? = v → σ[x ↦ (v :: (σ x).tail)] = σ := by
+  intro
+  simpa (config := { singlePass := true })
+    only [List.eq_cons_of_mem_head? ‹(σ x).head? = v›]
+    using @update_unchanged σ x
 
 end Store
 
