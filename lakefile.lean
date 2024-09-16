@@ -6,7 +6,7 @@ package «master_thesis» where
     ⟨`pp.unicode.fun, true⟩ -- pretty-prints `fun a ↦ b`
   ]
 
-require mathlib from git "https://github.com/leanprover-community/mathlib4.git" @ "v4.10.0"
+require mathlib from git "https://github.com/leanprover-community/mathlib4" @ "v4.11.0"
 
 -- meta if get_config? doc = some "on" then
 require «doc-gen4» from git "https://github.com/leanprover/doc-gen4" @ "v4.10.0"
