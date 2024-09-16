@@ -116,6 +116,8 @@ instance : ToString Com where
 
 end Com
 
+open Com
+
 /-- Interpreter for LOOP. The interpreter takes as input a `Com` and an evaluation `State` and
 outputs the resulting `State` obtained by applying the command to the initial state. -/
 def eval (P : Com) (s : State) : State :=
@@ -123,11 +125,11 @@ def eval (P : Com) (s : State) : State :=
   | ⊥      => ⊥
   | some σ =>
     match P with
-    | .SKIP     => σ
-    | .ZER x    => σ[x ↦ 0]
-    | .ASN x y  => σ[x ↦ (σ y)]
-    | .INC x    => σ[x ↦ ((σ x) + 1)]
-    | .SEQ P Q  => (eval Q) (eval P σ)
-    | .LOOP x P => (fun σ' => (eval P σ'))^[σ x] σ
+    | SKIP     => σ
+    | ZER x    => σ[x ↦ 0]
+    | ASN x y  => σ[x ↦ (σ y)]
+    | INC x    => σ[x ↦ ((σ x) + 1)]
+    | SEQ P Q  => (eval Q) (eval P σ)
+    | LOOP x P => (fun σ' => (eval P σ'))^[σ x] σ
 
 end LOOP
