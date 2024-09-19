@@ -146,7 +146,7 @@ theorem inv_inv (P : Com) : inv (inv P) = P := by
   case SEQ ih₁ ih₂ => simp[inv, ih₁, ih₂]
   case FOR ih      => simp[inv, ih]
 
-/-! ### Iterpreter -/
+/-! ### Interpreter -/
 
 mutual
   /-- Interpreter for SCORE. The interpreter takes as input a `Com` and an evaluation `State` and
