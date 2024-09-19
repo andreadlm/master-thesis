@@ -3,6 +3,7 @@
 Master thesis in computer science, University of Turin.
 Author: Andrea Delmastro
 -/
+import Mathlib.Data.Finset.Basic
 import Mathlib.Logic.Function.Iterate
 import MasterThesis.Commons
 
@@ -52,14 +53,14 @@ notation:65 σ:65 "[" x:65 " ↦ " v:65 "]" => update σ x v
 /-- If `x = y` then the current value of `y` in `σ[x ↦ v]` is `v`. -/
 @[simp] lemma update_same {σ : Store} {x y : Ident} {v : Nat} : x = y → (σ[x ↦ v]) y = v := by
   intros
-  unfold update
+  rw [update]
   apply if_pos
   assumption
 
 /-- If `x ≠ y` then the current value of `y` in `σ[x ↦ v]` is `σ y`. -/
 @[simp] lemma update_other {σ : Store} {x y : Ident} {v : Nat} : x ≠ y → (σ[x ↦ v]) y = σ y := by
   intros
-  unfold update
+  rw [update]
   apply if_neg
   assumption
 
@@ -97,6 +98,16 @@ namespace Com
 
 infixr:80 ";;" => SEQ
 
+/-- Computes the set of identifiers that appear in a LOOP command. -/
+def ids (P : Com) : Finset Ident :=
+  match P with
+  | SKIP     => {}
+  | ZER x    => {x}
+  | ASN x y  => {x, y}
+  | INC x    => {x}
+  | SEQ P Q  => ids P ∪ ids Q
+  | LOOP x P => {x} ∪ ids P
+
 /-- Computes the string representation of a LOOP command. -/
 def comToString (indLv : Nat) (P : Com) : String :=
   let rec ind (indLv : Nat) : String :=
@@ -130,6 +141,6 @@ def eval (P : Com) (s : State) : State :=
     | ASN x y  => σ[x ↦ (σ y)]
     | INC x    => σ[x ↦ ((σ x) + 1)]
     | SEQ P Q  => (eval Q) (eval P σ)
-    | LOOP x P => (fun σ' => (eval P σ'))^[σ x] σ
+    | LOOP x P => (fun σ' => eval P σ')^[σ x] σ
 
 end LOOP

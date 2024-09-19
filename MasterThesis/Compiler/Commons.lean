@@ -29,16 +29,3 @@ def ids (P : SCORE.Com) : Finset Ident :=
   | FOR x P => {x} ∪ ids P
 
 end SCORE.Com
-
-namespace LOOP.Com
-
-def ids (P : LOOP.Com) : Finset Ident :=
-  match P with
-  | SKIP     => {}
-  | ZER x    => {x}
-  | ASN x y  => {x, y}
-  | INC x    => {x}
-  | SEQ P Q  => ids P ∪ ids Q
-  | LOOP x P => {x} ∪ ids P
-
-end LOOP.Com
