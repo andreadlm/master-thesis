@@ -5,11 +5,11 @@ open LOOP Com
 open SCORE Com
 
 def l2s' (ev : Ident) (P : LOOP.Com) : SCORE.Com :=
+  CON ev;;
   match P with
   | .SKIP     => SKIP
   | .ZER x    => CON x
-  | .ASN x y  => CON ev;;
-                 FOR y (INC ev);;
+  | .ASN x y  => FOR y (INC ev);;
                  CON x;;
                  FOR ev (INC x);;
                  FOR x (DEC ev)
