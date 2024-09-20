@@ -3,22 +3,22 @@ import MasterThesis.LOOP.Language
 import MasterThesis.SCORE.Language
 import MasterThesis.Compiler.Commons
 
-lemma eq_states_update {σ : LOOP.Store} {τ : SCORE.Store} (x : Ident) (v : ℕ) : σ =ₛ τ → σ[x ↦ v] =ₛ τ[x ↦ ↑v :: τ x] := by
+lemma eq_states_update {σ : LOOP.Store} {τ : SCORE.Store} (x : Ident) (v : ℕ) : σ ∼ τ → σ[x ↦ v] ∼ τ[x ↦ ↑v :: τ x] := by
   intros _ y
   cases eq_or_ne x y
   · simp [‹x = y›]
-  · simpa [‹x ≠ y›] using ‹σ=ₛτ› y
+  · simpa [‹x ≠ y›] using ‹σ ∼ τ› y
 
-lemma eq_states_INC {σ : LOOP.Store} {t : SCORE.State} {x : Ident} {v : ℕ} : σ[x ↦ v] =ₛ t → σ[x ↦ v + 1] =ₛ SCORE.eval (SCORE.Com.INC x) t := by
+lemma eq_states_INC {σ : LOOP.Store} {t : SCORE.State} {x : Ident} {v : ℕ} : σ[x ↦ v] ∼ t → σ[x ↦ v + 1] ∼ SCORE.eval (SCORE.Com.INC x) t := by
   intro
   cases t
   case some τ _ =>
     rw [SCORE.eval]
-    simp only [←‹some (σ[x ↦ v]) =ₛ some τ› x]
+    simp only [←‹some (σ[x ↦ v]) ∼ some τ› x]
     intro y
     cases eq_or_ne x y
     · simp [‹x = y›]
-    · simpa [‹x ≠ y›] using ‹some (σ[x ↦ v]) =ₛ some τ› y
+    · simpa [‹x ≠ y›] using ‹some (σ[x ↦ v]) ∼ some τ› y
   case none =>
     contradiction
 

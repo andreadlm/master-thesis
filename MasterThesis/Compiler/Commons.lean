@@ -7,7 +7,7 @@ def eq_states (s : LOOP.State) (t : SCORE.State) : Prop :=
   | some σ, some τ => ∀ (x : Ident), some ↑(σ x) = (τ x).head?
   | _     , _      => False
 
-infix:50 "=ₛ" => eq_states
+infix:50 "∼" => eq_states
 
 def eq_states_idents (s : LOOP.State) (t : SCORE.State) (ids : Finset Ident) : Prop :=
   match s, t with
