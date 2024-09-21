@@ -9,16 +9,16 @@ lemma eq_states_update {σ : LOOP.Store} {τ : SCORE.Store} (x : Ident) (v : ℕ
   · simp [‹x = y›]
   · simpa [‹x ≠ y›] using ‹σ ∼ τ› y
 
-lemma eq_states_INC {σ : LOOP.Store} {t : SCORE.State} {x : Ident} {v : ℕ} : σ[x ↦ v] ∼ t → σ[x ↦ v + 1] ∼ SCORE.eval (SCORE.Com.INC x) t := by
+lemma eq_states_INC {σ : LOOP.Store} {t : SCORE.State} {x : Ident} {v : ℕ} : σ[x ↦ v] ∼ t → σ[x ↦ v + 1] ∼ SCORE.eval (.INC x) t := by
   intro
   cases t
   case some τ _ =>
     rw [SCORE.eval]
-    simp only [←‹some (σ[x ↦ v]) ∼ some τ› x]
+    simp only [←‹σ[x ↦ v] ∼ τ› x]
     intro y
     cases eq_or_ne x y
     · simp [‹x = y›]
-    · simpa [‹x ≠ y›] using ‹some (σ[x ↦ v]) ∼ some τ› y
+    · simpa [‹x ≠ y›] using ‹σ[x ↦ v] ∼ τ› y
   case none =>
     contradiction
 
