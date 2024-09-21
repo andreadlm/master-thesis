@@ -52,7 +52,7 @@ notation:65 σ:65 "[" x:65 " ↦ " l:65 "]" => update σ x l
   intros; simp only [if_neg ‹x ≠ y›, update]
 
 /-- Updating a variable to its current value produces no change. -/
-@[simp] lemma update_unchanged {σ : Store} {x : Ident} : σ[x ↦ (σ x)] = σ := by
+@[simp] lemma update_no_update {σ : Store} {x : Ident} : σ[x ↦ (σ x)] = σ := by
   funext y
   cases eq_or_ne x y with
   | inl /- x = y -/ => rewrite [‹x = y›]; simp only [update_same]
@@ -66,11 +66,11 @@ notation:65 σ:65 "[" x:65 " ↦ " l:65 "]" => update σ x l
   | inr /- x ≠ y -/ => simp only [update_other ‹x ≠ y›]
 
 /-- Alternative version of `update_unchanged` that considers the structure of the list. -/
-lemma update_unchanged_cons {σ : Store} {x : Ident} {v : Int} : (σ x).head? = v → σ[x ↦ (v :: (σ x).tail)] = σ := by
+lemma update_no_update_cons {σ : Store} {x : Ident} {v : Int} : (σ x).head? = v → σ[x ↦ (v :: (σ x).tail)] = σ := by
   intro
   simpa (config := { singlePass := true })
     only [List.eq_cons_of_mem_head? ‹(σ x).head? = v›]
-    using @update_unchanged σ x
+    using @update_no_update σ x
 
 end Store
 
@@ -265,7 +265,7 @@ lemma invertible_CON {s t : State} {x : Ident} : eval (CON x) s = t ∧ t ≠ �
         split at lh
         case h_1 =>
           rw [←‹σ[x ↦ (σ x).tail] = s›, eval]
-          simp [update_unchanged_cons ‹(σ x).head? = some 0›]
+          simp [update_no_update_cons ‹(σ x).head? = some 0›]
         case h_2 =>
           symm at ‹⊥ = s›
           contradiction
@@ -296,7 +296,7 @@ lemma invertible_DEC {s t : State} {x : Ident} : eval (DEC x) s = t ∧ t ≠ �
         split at lh
         case h_1 v _ =>
           simpa [inv, ←‹σ[x ↦ (v - 1) :: (σ x).tail] = t›, eval]
-            using update_unchanged_cons ‹(σ x).head? = v›
+            using update_no_update_cons ‹(σ x).head? = v›
         case h_2 =>
           symm at ‹⊥ = t›
           contradiction
@@ -318,7 +318,7 @@ lemma invertible_DEC {s t : State} {x : Ident} : eval (DEC x) s = t ∧ t ≠ �
         split at lh
         case h_1 v _ =>
           simpa [←‹σ[x ↦ ((v + 1) :: (σ x).tail)] = s›, eval]
-            using update_unchanged_cons ‹(σ x).head? = v›
+            using update_no_update_cons ‹(σ x).head? = v›
         case h_2 =>
           symm at ‹⊥ = s›
           contradiction
