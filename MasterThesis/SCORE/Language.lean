@@ -65,7 +65,7 @@ notation:65 σ:65 "[" x:65 " ↦ " l:65 "]" => update σ x l
   | inl /- x = y -/ => simp only [update_same ‹x = y›]
   | inr /- x ≠ y -/ => simp only [update_other ‹x ≠ y›]
 
-/-- Alternative version of `update_unchanged` that considers the structure of the list. -/
+/-- Alternative version of `update_no_update` that considers the structure of the list. -/
 lemma update_no_update_cons {σ : Store} {x : Ident} {v : Int} : (σ x).head? = v → σ[x ↦ (v :: (σ x).tail)] = σ := by
   intro
   simpa (config := { singlePass := true })
