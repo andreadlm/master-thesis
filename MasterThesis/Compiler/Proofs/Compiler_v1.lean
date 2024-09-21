@@ -28,17 +28,13 @@ theorem soundness {s : LOOP.State} {t : SCORE.State} (P : LOOP.Com) : s ∼ t �
       case succ m ih =>
         simpa [Nat.add_comm m 1, Function.iterate_add_apply] using eq_states_INC ih
   case INC.some.some x σ τ =>
-    rw [LOOP.eval, l2s, SCORE.eval]
-    split
-    · intro y
-      cases eq_or_ne x y
-      · simpa [‹x = y›, ←‹σ ∼ τ› y] using ‹(τ x).head? = some _›
-      · simpa [‹x ≠ y›] using ‹σ ∼ τ› y
-    · simp [←‹σ ∼ τ› x] at ‹(τ x).head? = none›
+    rw [LOOP.eval, l2s]
+    rw [←@LOOP.Store.update_no_update σ x] at ‹σ ∼ τ›
+    exact eq_states_INC ‹σ[x ↦ σ x] ∼ τ›
   case SEQ.some.some P Q ih₁ ih₂ σ τ =>
     rw [LOOP.eval, l2s, SCORE.eval]
     exact ih₂ (ih₁ ‹σ ∼ τ›)
-  case LOOP.some.some x LQ ih σ τ =>
+  case LOOP.some.some x P ih σ τ =>
     rw [LOOP.eval, l2s, SCORE.eval]
     split
     · simp only [←(Option.some_inj.mp (Eq.trans (‹σ ∼ τ› x) ‹(τ x).head? = some _›))]
@@ -47,7 +43,7 @@ theorem soundness {s : LOOP.State} {t : SCORE.State} (P : LOOP.Com) : s ∼ t �
       case zero =>
         simpa
       case succ _ ih₂ =>
-        exact ih₂ (LOOP.eval LQ s) (SCORE.eval (l2s LQ) t) (ih ‹s ∼ t›)
+        exact ih₂ (LOOP.eval P s) (SCORE.eval (l2s P) t) (ih ‹s ∼ t›)
     · simp [←‹σ ∼ τ› x] at ‹(τ x).head? = none›
   all_goals (simp only [eq_states] at eqs)
 
