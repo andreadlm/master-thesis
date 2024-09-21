@@ -65,7 +65,7 @@ notation:65 σ:65 "[" x:65 " ↦ " v:65 "]" => update σ x v
   assumption
 
 /-- Updating a variable to its current value produces no change. -/
-@[simp] lemma update_no_update {σ : Store} {x : Ident} : (σ[x ↦ (σ x)]) = σ := by
+@[simp] lemma update_no_update {σ : Store} {x : Ident} : σ[x ↦ (σ x)] = σ := by
   funext y
   cases eq_or_ne x y with
   | inl /- x = y -/ => rw[update_same ‹x = y›, ‹x = y›]
