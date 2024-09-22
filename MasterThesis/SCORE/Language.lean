@@ -1,5 +1,5 @@
 /-
-"A LEAN-certified reversibilization of Meyer-Ritchie LOOP language".
+"A Lean-certified reversibilization of Meyer-Ritchie LOOP language".
 Master thesis in computer science, University of Turin.
 Authors: Andrea Delmastro
 -/
