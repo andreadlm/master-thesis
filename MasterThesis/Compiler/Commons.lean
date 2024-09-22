@@ -2,13 +2,6 @@ import Mathlib.Data.Finset.Basic
 import MasterThesis.LOOP.Language
 import MasterThesis.SCORE.Language
 
-def eq_states (s : LOOP.State) (t : SCORE.State) : Prop :=
-  match s, t with
-  | some σ, some τ => ∀ (x : Ident), some ↑(σ x) = (τ x).head?
-  | _     , _      => False
-
-infix:50 "∼" => eq_states
-
 def eq_states_idents (s : LOOP.State) (t : SCORE.State) (ids : Finset Ident) : Prop :=
   match s, t with
   | some σ, some τ => ∀ (x : Ident), x ∈ ids → some ↑(σ x) = (τ x).head?
