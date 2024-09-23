@@ -210,11 +210,9 @@ lemma invertible_SKIP {s t : State} : eval SKIP s = t ∧ t ≠ ⊥ ↔ eval SKI
     match s with
     | some σ =>
       constructor
-      case left =>
-        rw [eval] at ‹eval SKIP σ = t›
+      · rw [eval] at ‹eval SKIP σ = t›
         simp [inv, ←‹σ = t›, eval]
-      case right =>
-        exact Option.some_ne_none σ
+      · exact Option.some_ne_none σ
     | ⊥ =>
       rw [eval] at ‹eval SKIP ⊥ = t›
       symm at ‹⊥ = t›
@@ -225,11 +223,9 @@ lemma invertible_SKIP {s t : State} : eval SKIP s = t ∧ t ≠ ⊥ ↔ eval SKI
     match t with
     | some σ =>
       constructor
-      case left =>
-        rw [inv, eval] at ‹eval SKIP⁻¹ σ = s›
+      · rw [inv, eval] at ‹eval SKIP⁻¹ σ = s›
         simp [←‹σ = s›, eval]
-      case right =>
-        exact Option.some_ne_none σ
+      · exact Option.some_ne_none σ
     | ⊥ =>
       rw [inv, eval] at ‹eval SKIP⁻¹ ⊥ = s›
       symm at ‹⊥ = s›
@@ -244,11 +240,9 @@ lemma invertible_CON {s t : State} {x : Ident} : eval (CON x) s = t ∧ t ≠ �
     match s with
     | some σ =>
       constructor
-      case left =>
-        rw [eval] at ‹eval (CON x) σ = t›
+      · rw [eval] at ‹eval (CON x) σ = t›
         simp [inv, ←‹σ[x ↦ 0 :: σ x] = t›, eval]
-      case right =>
-        exact Option.some_ne_none σ
+      · exact Option.some_ne_none σ
     | ⊥ =>
       rw [eval] at ‹eval (CON x) ⊥ = t›
       symm at ‹⊥ = t›
@@ -260,17 +254,13 @@ lemma invertible_CON {s t : State} {x : Ident} : eval (CON x) s = t ∧ t ≠ �
     match t with
     | some σ =>
       constructor
-      case left =>
-        rw [inv, eval] at ‹eval (CON x)⁻¹ σ = s›
+      · rw [inv, eval] at ‹eval (CON x)⁻¹ σ = s›
         split at lh
-        case h_1 =>
-          rw [←‹σ[x ↦ (σ x).tail] = s›, eval]
+        · rw [←‹σ[x ↦ (σ x).tail] = s›, eval]
           simp [update_no_update_cons ‹(σ x).head? = some 0›]
-        case h_2 =>
-          symm at ‹⊥ = s›
+        · symm at ‹⊥ = s›
           contradiction
-      case right =>
-        exact Option.some_ne_none σ
+      · exact Option.some_ne_none σ
     | ⊥ =>
       rw [inv, eval] at ‹eval (CON x)⁻¹ ⊥ = s›
       symm at ‹⊥ = s›
@@ -291,8 +281,7 @@ lemma invertible_DEC {s t : State} {x : Ident} : eval (DEC x) s = t ∧ t ≠ �
     match s with
     | some σ =>
       constructor
-      case left =>
-        rw [eval] at ‹eval (DEC x) σ = t›
+      · rw [eval] at ‹eval (DEC x) σ = t›
         split at lh
         case h_1 v _ =>
           simpa [inv, ←‹σ[x ↦ (v - 1) :: (σ x).tail] = t›, eval]
@@ -300,8 +289,7 @@ lemma invertible_DEC {s t : State} {x : Ident} : eval (DEC x) s = t ∧ t ≠ �
         case h_2 =>
           symm at ‹⊥ = t›
           contradiction
-      case right =>
-        exact Option.some_ne_none σ
+      · exact Option.some_ne_none σ
     | ⊥ =>
       rw [eval] at ‹eval (DEC x) ⊥ = t›
       symm at ‹⊥ = t›
@@ -313,8 +301,7 @@ lemma invertible_DEC {s t : State} {x : Ident} : eval (DEC x) s = t ∧ t ≠ �
     match t with
     | some σ =>
       constructor
-      case left =>
-        rw [inv, eval] at ‹eval (DEC x)⁻¹ σ = s›
+      · rw [inv, eval] at ‹eval (DEC x)⁻¹ σ = s›
         split at lh
         case h_1 v _ =>
           simpa [←‹σ[x ↦ ((v + 1) :: (σ x).tail)] = s›, eval]
@@ -322,8 +309,7 @@ lemma invertible_DEC {s t : State} {x : Ident} : eval (DEC x) s = t ∧ t ≠ �
         case h_2 =>
           symm at ‹⊥ = s›
           contradiction
-      case right =>
-        exact Option.some_ne_none σ
+      · exact Option.some_ne_none σ
     | ⊥ =>
       rw [inv, eval] at ‹eval (DEC x)⁻¹ ⊥ = s›
       symm at ‹⊥ = s›
