@@ -40,6 +40,10 @@ lake build MasterThesis:docs
 The root of the built docs will be `.lake/build/doc/index.html`.
 
 ## Running
+> [!IMPORTANT]
+> The command line version currently doesn't work on Windows due to a known 
+[issue](https://github.com/leanprover/lean4/issues/4159) with lake.
+
 To execute the compiler from the command line run:
 
 ```shell
