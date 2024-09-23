@@ -3,7 +3,6 @@ import Mathlib.Tactic.Linarith
 import MasterThesis.LOOP.Language
 import MasterThesis.SCORE.Language
 import MasterThesis.Compiler.Compiler_v2
-import MasterThesis.Compiler.Proofs.Commons
 
 namespace l2s'
 
