@@ -82,14 +82,11 @@ lemma update_swap {σ : Store} {x y : Ident} {l₁ l₂ : List Int} : x ≠ y �
     | inl /- y = z -/ =>
       have := Eq.trans ‹x = z› ‹y = z›.symm
       contradiction
-    | inr /- y ≠ z -/ =>
-      simp [‹y ≠ z›, ‹x = z›]
+    | inr /- y ≠ z -/ => simp [‹y ≠ z›, ‹x = z›]
   | inr /- x ≠ z -/ =>
     cases eq_or_ne y z with
-    | inl /- y = z -/ =>
-      simp [‹y = z›, ‹x ≠ z›]
-    | inr /- y ≠ z -/ =>
-      simp [‹y ≠ z›, ‹x ≠ z›]
+    | inl /- y = z -/ => simp [‹y = z›, ‹x ≠ z›]
+    | inr /- y ≠ z -/ => simp [‹y ≠ z›, ‹x ≠ z›]
 
 end Store
 
