@@ -72,6 +72,25 @@ lemma update_no_update_cons {σ : Store} {x : Ident} {v : Int} : (σ x).head? = 
     only [List.eq_cons_of_mem_head? ‹(σ x).head? = v›]
     using @update_no_update σ x
 
+/-- The order in which two different variables are updated is not significant.  -/
+lemma update_swap {σ : Store} {x y : Ident} {l₁ l₂ : List Int} : x ≠ y → σ[x ↦ l₁][y ↦ l₂] = σ[y ↦ l₂][x ↦ l₁] := by
+  intro
+  funext z
+  cases eq_or_ne x z with
+  | inl /- x = z -/ =>
+    cases eq_or_ne y z with
+    | inl /- y = z -/ =>
+      have := Eq.trans ‹x = z› ‹y = z›.symm
+      contradiction
+    | inr /- y ≠ z -/ =>
+      simp [‹y ≠ z›, ‹x = z›]
+  | inr /- x ≠ z -/ =>
+    cases eq_or_ne y z with
+    | inl /- y = z -/ =>
+      simp [‹y = z›, ‹x ≠ z›]
+    | inr /- y ≠ z -/ =>
+      simp [‹y ≠ z›, ‹x ≠ z›]
+
 end Store
 
 /-- A `State` can be a `Store` or a failure. -/
