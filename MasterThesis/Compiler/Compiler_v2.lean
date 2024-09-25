@@ -43,9 +43,15 @@ def eq_states_idents (s : LOOP.State) (t : SCORE.State) (ids : Finset Ident) : P
 
 notation:50 s:50 "∼[" P:50 "]" t:50 => eq_states_idents s t P
 
-lemma eq_states_idents_subs {s : LOOP.State} {t : SCORE.State} {a b : Finset Ident} : s ∼[a ∪ b] t → s ∼[a] t := by sorry
+lemma eq_states_idents_subs {s : LOOP.State} {t : SCORE.State} {a b : Finset Ident} : s ∼[a ∪ b] t → s ∼[a] t := by
+  intro eqs
+  cases s <;> cases t
+  case some.some σ τ =>
+    intros x _
+    exact ‹σ ∼[a ∪ b] τ› x (Finset.mem_union_left b ‹x ∈ a›)
+  all_goals (simp [eq_states_idents] at eqs)
 
-lemma iter_inc {x : Ident} {σ : SCORE.Store} {k : Int} (v : ℕ) : (σ x).head? = k → (fun t ↦ SCORE.eval (INC x) t)^[v] σ = σ[x ↦ (k + ↑v) :: (σ x).tail] := by
+lemma iter_inc {x : Ident} {σ : SCORE.Store} {k : Int} (v : ℕ) : (σ x).head? = k → (fun t => SCORE.eval (INC x) t)^[v] σ = σ[x ↦ (k + ↑v) :: (σ x).tail] := by
   intro
   induction v
   case zero =>
@@ -63,7 +69,7 @@ lemma iter_inc {x : Ident} {σ : SCORE.Store} {k : Int} (v : ℕ) : (σ x).head?
             have : k + ↑m + 1 = k + (↑m + 1) := by linarith
             simp [this]
 
-lemma iter_dec {x : Ident} {σ : SCORE.Store} {k : Int} (v : ℕ) : (σ x).head? = k → (fun t ↦ SCORE.eval (DEC x) t)^[v] σ = σ[x ↦ (k - ↑v) :: (σ x).tail] := by
+lemma iter_dec {x : Ident} {σ : SCORE.Store} {k : Int} (v : ℕ) : (σ x).head? = k → (fun t => SCORE.eval (DEC x) t)^[v] σ = σ[x ↦ (k - ↑v) :: (σ x).tail] := by
   intro
   induction v
   case zero =>
@@ -143,7 +149,7 @@ lemma for_dec {x y : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} : (σ x).head? 
 
 lemma ev_invariant {x y ev : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} (h : ev ∉ (ASN x y).ids) : (σ x).head? = v₁ → (σ y).head? = v₂ → ∃ (σ' : SCORE.Store), (eval (l2s ev (ASN x y)) σ = σ' ∧ (σ' ev).head? = some 0) := by
   intros
-  simp [ids] at ‹ev ∉ (ASN x y).ids›
+  have : ev ≠ x ∧ ev ≠ y := by simpa [ids] using ‹ev ∉ (ASN x y).ids›
   have ⟨_, _⟩ := ‹ev ≠ x ∧ ev ≠ y›
   constructor
   · constructor
