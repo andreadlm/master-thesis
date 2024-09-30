@@ -19,22 +19,23 @@ open SCORE Com Store
 namespace v2
 
 def l2s (ev : Ident) (P : LOOP.Com) : SCORE.Com :=
-  CON ev;;
-  match P with
-  | .SKIP     => SKIP
-  | .ZER x    => CON x
-  | .ASN x y  => FOR y (INC ev);;
-                 CON x;;
-                 FOR ev (INC x);;
-                 FOR x (DEC ev)
-  | .INC x    => INC x
-  | .SEQ P Q  => l2s ev P;;
-                 l2s ev Q
-  | .LOOP x P => FOR x (l2s ev P)
+  let rec l2s' (ev : Ident) (P : LOOP.Com) : SCORE.Com :=
+    match P with
+    | .SKIP     => SKIP
+    | .ZER x    => CON x
+    | .ASN x y  => FOR y (INC ev);;
+                   CON x;;
+                   FOR ev (INC x);;
+                   FOR x (DEC ev)
+    | .INC x    => INC x
+    | .SEQ P Q  => l2s' ev P;;
+                   l2s' ev Q
+    | .LOOP x P => FOR x (l2s' ev P)
+  CON ev;; l2s' ev P
 
 end v2
 
-open v2
+open v2 l2s
 
 def eq_states_idents (s : LOOP.State) (t : SCORE.State) (ids : Finset Ident) : Prop :=
   match s, t with
@@ -43,13 +44,35 @@ def eq_states_idents (s : LOOP.State) (t : SCORE.State) (ids : Finset Ident) : P
 
 notation:50 s:50 " ∼[" P:50 "] " t:50 => eq_states_idents s t P
 
-lemma eq_states_idents_subs {s : LOOP.State} {t : SCORE.State} {a b : Finset Ident} : s ∼[a ∪ b] t → s ∼[a] t := by
+lemma eq_states_idents_no_fail {σ : LOOP.Store} {τ : SCORE.Store} {P : LOOP.Com} {Q : SCORE.Com} {ids : Finset Ident}: LOOP.eval P σ ∼[ids] SCORE.eval Q τ → (∃σ', LOOP.eval P σ = some σ') ∧ (∃τ', SCORE.eval Q τ = some τ') := by
+  intros
+  cases Option.eq_none_or_eq_some (LOOP.eval P σ) <;> cases Option.eq_none_or_eq_some (SCORE.eval Q τ)
+  case inr.inr =>
+    constructor
+    repeat assumption
+  case inr.inl eq₁ eq₂ | inl.inr eq₁ eq₂ | inl.inl eq₁ eq₂ =>
+    simp [eq₁, eq₂, eq_states_idents] at ‹LOOP.eval P σ ∼[ids] SCORE.eval Q τ›
+
+lemma eq_states_idents_extend {σ : LOOP.Store} {τ : SCORE.Store} {x ev : Ident} {P : LOOP.Com} {a : Finset Ident} : ev ∉ P.ids → x ∉ P.mids → LOOP.eval P σ ∼[a] SCORE.eval (l2s' ev P) τ → LOOP.eval P σ ∼[{x} ∪ a] SCORE.eval (l2s' ev P) τ := by
+  sorry
+
+lemma eq_states_idents_reduce_left {s : LOOP.State} {t : SCORE.State} {a b : Finset Ident} : s ∼[a ∪ b] t → s ∼[a] t := by
   intro eqs
   cases s <;> cases t
   case some.some σ τ =>
     intros x _
     exact ‹σ ∼[a ∪ b] τ› x (Finset.mem_union_left b ‹x ∈ a›)
   all_goals (simp [eq_states_idents] at eqs)
+
+lemma eq_states_idents_reduce_right {s : LOOP.State} {t : SCORE.State} {a b : Finset Ident} : s ∼[a ∪ b] t → s ∼[b] t := by
+  sorry
+
+lemma eq_states_idents_update_right {σ : LOOP.Store} {τ : SCORE.Store} {ids : Finset Ident} {x : Ident} {l : List Int} : σ ∼[ids] τ → x ∉ ids → σ ∼[ids] τ[x ↦ l] := by
+  intros _ _ y _
+  cases eq_or_ne y x
+  · rw [‹y = x›] at ‹y ∈ ids›
+    contradiction
+  · simpa [‹y ≠ x›.symm] using ‹σ ∼[ids] τ› y ‹y ∈ ids›
 
 lemma iter_inc {x : Ident} {σ : SCORE.Store} {k : Int} (v : ℕ) : (σ x).head? = k → (fun t => SCORE.eval (INC x) t)^[v] σ = σ[x ↦ (k + ↑v) :: (σ x).tail] := by
   intro
@@ -143,150 +166,136 @@ lemma for_dec {x y : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} : (σ x).head? 
   · rw [‹(σ y).head? = v₂›] at ‹(σ y).head? = none›
     contradiction
 
-lemma ev_invariant {x y ev : Ident} {v₁ v₂ : Int} {σ : SCORE.Store} (h : ev ∉ (ASN x y).ids) : (σ x).head? = v₁ → (σ y).head? = v₂ → ∃ (σ' : SCORE.Store), (eval (l2s ev (ASN x y)) σ = σ' ∧ (σ' ev).head? = some 0) := by
-  intros
-  have ⟨_, _⟩ : ev ≠ x ∧ ev ≠ y := by simpa [ids] using ‹ev ∉ (ASN x y).ids›
-  constructor
-  · constructor
-    · calc
-        eval (l2s ev (ASN x y)) σ
-        _ = eval (CON ev;; FOR y (INC ev);; CON x;; FOR ev (INC x);; FOR x (DEC ev)) σ := by
-              simp [l2s]
-        _ = eval (FOR y (INC ev);; CON x;; FOR ev (INC x);; FOR x (DEC ev)) (σ[ev ↦ 0 :: σ ev]) := by
-              simp [SCORE.eval]
-        _ = eval (CON x;; FOR ev (INC x);; FOR x (DEC ev)) (eval (FOR y (INC ev)) (σ[ev ↦ 0 :: σ ev])) := by
-              simp [SCORE.eval]
-        _ = eval (CON x;; FOR ev (INC x);; FOR x (DEC ev)) (σ[ev ↦ v₂ :: σ ev]) := by
-              have : ((σ[ev ↦ 0 :: σ ev]) ev).head? = some 0 := by simp
-              have : ((σ[ev ↦ 0 :: σ ev]) y).head? = v₂ := by simp [‹ev ≠ y›, ‹(σ y).head? = v₂›]
-              simp [for_inc ‹((σ[ev ↦ 0 :: σ ev]) ev).head? = some 0› ‹((σ[ev ↦ 0 :: σ ev]) y).head? = v₂›]
-        _ = eval (FOR ev (INC x);; FOR x (DEC ev)) (σ[ev ↦ v₂ :: σ ev][x ↦ 0 :: σ x]) := by
-              simp[SCORE.eval, ‹ev ≠ x›]
-        _ = eval (FOR x (DEC ev)) (eval (FOR ev (INC x)) (σ[ev ↦ v₂ :: σ ev][x ↦ 0 :: σ x])) := by
-              simp [SCORE.eval]
-        _ = eval (FOR x (DEC ev)) (σ[ev ↦ v₂ :: σ ev][x ↦ v₂ :: σ x]) := by
-              have : ((σ[ev ↦ v₂ :: σ ev][x ↦ 0 :: σ x]) x).head? = some 0 := by simp
-              have : ((σ[ev ↦ v₂ :: σ ev][x ↦ 0 :: σ x]) ev).head? = v₂ := by simp [‹ev ≠ x›.symm]
-              simp [for_inc ‹((σ[ev ↦ v₂ :: σ ev][x ↦ 0 :: σ x]) x).head? = some 0› ‹((σ[ev ↦ v₂ :: σ ev][x ↦ 0 :: σ x]) ev).head? = v₂›]
-        _ = σ[x ↦ v₂ :: σ x][ev ↦ 0 :: σ ev] := by
-              have : ((σ[ev ↦ v₂ :: σ ev][x ↦ v₂ :: σ x]) ev).head? = v₂ := by simp [‹ev ≠ x›.symm]
-              have : ((σ[ev ↦ v₂ :: σ ev][x ↦ v₂ :: σ x]) x).head? = v₂ := by simp
-              simp [for_dec ‹((σ[ev ↦ v₂ :: σ ev][x ↦ v₂ :: σ x]) ev).head? = v₂› ‹((σ[ev ↦ v₂ :: σ ev][x ↦ v₂ :: σ x]) x).head? = v₂›, ‹ev ≠ x›.symm, update_swap ‹ev ≠ x›.symm]
-    · simp
+lemma ev_invariant' {τ τ' : SCORE.Store} {ev : Ident} {P : LOOP.Com} : ev ∉ P.ids → (τ ev).head? = some 0 → SCORE.eval (l2s' ev P) τ = τ' → (τ' ev).head? = some 0 := by
+  sorry
 
-theorem soundness_ext {s : LOOP.State} {t : SCORE.State} {ev : Ident} {ext : Finset Ident} (P : LOOP.Com) : ev ∉ (P.ids ∪ ext) → s ∼[P.ids ∪ ext] t → (LOOP.eval P s) ∼[P.ids ∪ ext] (SCORE.eval (l2s ev P) t) := by
-  intros h_ev eqs
-  induction P generalizing s t ext
-  all_goals (cases s <;> cases t <;> rw [LOOP.Com.ids] at *)
-  case SKIP.some.some σ τ =>
-    simp only [LOOP.eval, l2s, SCORE.eval]
+lemma soundness'_ext {σ : LOOP.Store} {τ : SCORE.Store} {ev : Ident} {ext : Finset Ident} (P : LOOP.Com) : ev ∉ (P.ids ∪ ext) → (τ ev).head? = some 0 → σ ∼[P.ids ∪ ext] τ → (LOOP.eval P σ) ∼[P.ids ∪ ext] (SCORE.eval (l2s' ev P) τ) := by
+  intros h_head_ev h_ev eqs
+  induction  P generalizing σ τ ext <;> rw [LOOP.Com.ids] at *
+  case SKIP =>
+     simpa only [LOOP.eval, l2s', SCORE.eval]
+  case ZER x =>
+    have ⟨_, _⟩ : ev ≠ x ∧ ev ∉ ext := by simpa using ‹ev ∉ {x} ∪ ext›
+    simp only [LOOP.eval, l2s', SCORE.eval]
     intros y _
-    cases eq_or_ne y ev
-    · rw [‹y = ev›] at ‹y ∈ ∅ ∪ ext›
-      contradiction
-    · simpa [‹y ≠ ev›.symm] using (‹σ ∼[∅ ∪ ext] τ› y ‹y ∈ ∅ ∪ ext›)
-  case ZER.some.some x σ τ =>
-    simp only [LOOP.eval, l2s, SCORE.eval]
-    intros y _
-    cases eq_or_ne x y <;> cases eq_or_ne y ev
-    case inr.inr => simpa [‹x ≠ y›, ‹y ≠ ev›.symm] using (‹σ ∼[{x} ∪ ext] τ› y ‹y ∈ {x} ∪ ext›)
-    case inr.inl => rw [‹y = ev›] at ‹y ∈ {x} ∪ ext›
-                    contradiction
-    all_goals (simp [‹x = y›])
-  case ASN.some.some x y σ τ =>
-    simp only [LOOP.eval, l2s]
+    cases eq_or_ne x y
+    · simp [‹x = y›]
+    · simpa [‹x ≠ y›] using ‹σ ∼[{x} ∪ ext] τ› y ‹y ∈ {x} ∪ ext›
+  case ASN x y =>
     have ⟨_, ⟨_, _⟩⟩ : ev ≠ x ∧ ev ≠ y ∧ ev ∉ ext := by simpa using ‹ev ∉ {x, y} ∪ ext›
+    have : (τ y).head? = some (σ y) := by
+      have : y ∈ {x, y} ∪ ext := by simp
+      simpa [‹ev ≠ y›] using (‹σ ∼[{x, y} ∪ ext] τ› y ‹y ∈ {x, y} ∪ ext›).symm
+    simp only [LOOP.eval, l2s']
     calc
-      eval (CON ev;; FOR y (INC ev);; CON x;; FOR ev (INC x);; FOR x (DEC ev)) τ
-      _ = eval (FOR y (INC ev);; CON x;; FOR ev (INC x);; FOR x (DEC ev)) (τ[ev ↦ 0 :: τ ev]) := by
+      eval (FOR y (INC ev);; CON x;; FOR ev (INC x);; FOR x (DEC ev)) τ
+      _ = eval (CON x;; FOR ev (INC x);; FOR x (DEC ev)) (eval (FOR y (INC ev)) τ) := by
             simp [SCORE.eval]
-      _ = eval (CON x;; FOR ev (INC x);; FOR x (DEC ev)) (eval (FOR y (INC ev)) (τ[ev ↦ 0 :: τ ev])) := by
-            simp [SCORE.eval]
-      _ = SCORE.eval (CON x;; FOR ev (INC x);; FOR x (DEC ev)) (τ[ev ↦ (σ y) :: τ ev]) := by
-            have : ((τ[ev ↦ 0 :: τ ev]) ev).head? = some 0 := by simp
-            have : ((τ[ev ↦ 0 :: τ ev]) y).head? = some (σ y) := by
-              have : y ∈ {x, y} ∪ ext := by simp
-              simpa [‹ev ≠ y›] using (‹σ ∼[{x, y} ∪ ext] τ› y ‹y ∈ {x, y} ∪ ext›).symm
-            simp [for_inc ‹((τ[ev ↦ 0 :: τ ev]) ev).head? = some 0› ‹((τ[ev ↦ 0 :: τ ev]) y).head? = some (σ y)›]
-      _ = eval (FOR ev (INC x);; FOR x (DEC ev)) (τ[ev ↦ (σ y) :: τ ev][x ↦ 0 :: τ x]) := by
+      _ = eval (CON x;; FOR ev (INC x);; FOR x (DEC ev)) (τ[ev ↦ (σ y) :: (τ ev).tail]) := by
+            simp [for_inc ‹(τ ev).head? = some 0› ‹(τ y).head? = some (σ y)›]
+      _ = eval (FOR ev (INC x);; FOR x (DEC ev)) (τ[ev ↦ (σ y) :: (τ ev).tail][x ↦ 0 :: τ x]) := by
             simp[SCORE.eval, ‹ev ≠ x›]
-      _ = eval (FOR x (DEC ev)) (eval (FOR ev (INC x)) (τ[ev ↦ (σ y) :: τ ev][x ↦ 0 :: τ x])) := by
+      _ = eval (FOR x (DEC ev)) (eval (FOR ev (INC x)) (τ[ev ↦ (σ y) :: (τ ev).tail][x ↦ 0 :: τ x])) := by
             simp [SCORE.eval]
-      _ = eval (FOR x (DEC ev)) (τ[ev ↦ (σ y) :: τ ev][x ↦ (σ y) :: τ x]) := by
-            have : ((τ[ev ↦ (σ y) :: τ ev][x ↦ 0 :: τ x]) x).head? = some 0 := by simp
-            have : ((τ[ev ↦ (σ y) :: τ ev][x ↦ 0 :: τ x]) ev).head? = some (σ y) := by simp [‹ev ≠ x›.symm]
-            simp [for_inc ‹((τ[ev ↦ (σ y) :: τ ev][x ↦ 0 :: τ x]) x).head? = some 0› ‹((τ[ev ↦ (σ y) :: τ ev][x ↦ 0 :: τ x]) ev).head? = some (σ y)›]
-      _ = τ[x ↦ (σ y) :: τ x][ev ↦ 0 :: τ ev] := by
-            have : ((τ[ev ↦ (σ y) :: τ ev][x ↦ (σ y) :: τ x]) ev).head? = some (σ y) := by simp [‹ev ≠ x›.symm]
-            have : ((τ[ev ↦ (σ y) :: τ ev][x ↦ (σ y) :: τ x]) x).head? = some (σ y) := by simp
-            simp [for_dec ‹((τ[ev ↦ (σ y) :: τ ev][x ↦ (σ y) :: τ x]) ev).head? = some (σ y)› ‹((τ[ev ↦ (σ y) :: τ ev][x ↦ (σ y) :: τ x]) x).head? = some (σ y)›, ‹ev ≠ x›.symm, update_swap ‹ev ≠ x›.symm]
+      _ = eval (FOR x (DEC ev)) (τ[ev ↦ (σ y) :: (τ ev).tail][x ↦ (σ y) :: τ x]) := by
+            have : ((τ[ev ↦ (σ y) :: (τ ev).tail][x ↦ 0 :: τ x]) x).head? = some 0 := by simp
+            have : ((τ[ev ↦ (σ y) :: (τ ev).tail][x ↦ 0 :: τ x]) ev).head? = some (σ y) := by simp [‹ev ≠ x›.symm]
+            simp [for_inc ‹((τ[ev ↦ (σ y) :: (τ ev).tail][x ↦ 0 :: τ x]) x).head? = some 0›
+                    ‹((τ[ev ↦ (σ y) :: (τ ev).tail][x ↦ 0 :: τ x]) ev).head? = some (σ y)›]
+      _ = τ[x ↦ (σ y) :: τ x][ev ↦ 0 :: (τ ev).tail] := by
+            have : ((τ[ev ↦ (σ y) :: (τ ev).tail][x ↦ (σ y) :: τ x]) ev).head? = some (σ y) := by simp [‹ev ≠ x›.symm]
+            have : ((τ[ev ↦ (σ y) :: (τ ev).tail][x ↦ (σ y) :: τ x]) x).head? = some (σ y) := by simp
+            simp [for_dec ‹((τ[ev ↦ (σ y) :: (τ ev).tail][x ↦ (σ y) :: τ x]) ev).head? = some (σ y)›
+                    ‹((τ[ev ↦ (σ y) :: (τ ev).tail][x ↦ (σ y) :: τ x]) x).head? = some (σ y)›,
+                  ‹ev ≠ x›.symm, update_swap ‹ev ≠ x›.symm]
     intros z _
     cases eq_or_ne x z <;> cases eq_or_ne z ev
     case inr.inr => simpa [‹x ≠ z›, ‹z ≠ ev›.symm] using (‹σ ∼[{x, y} ∪ ext] τ› z ‹z ∈ {x, y} ∪ ext›)
     case inl.inr => simp [‹x = z›, ‹z ≠ ev›.symm]
     all_goals (rw [‹z = ev›] at ‹z ∈ {x, y} ∪ ext›; contradiction)
-  case INC.some.some x σ τ =>
-    simp only [LOOP.eval, l2s, SCORE.eval]
-    split
-    · intros y _
-      cases eq_or_ne x y <;> cases eq_or_ne y ev
-      case inr.inr => simpa [‹x ≠ y›, ‹y ≠ ev›.symm] using (‹σ ∼[{x} ∪ ext] τ› y ‹y ∈ {x} ∪ ext›)
-      case inl.inr => simpa [‹x = y›, ‹y ≠ ev›.symm, ←‹σ ∼[{x} ∪ ext] τ› y] using ‹((τ[ev ↦ 0 :: τ ev]) x).head? = some _›
-      all_goals (rw [‹y = ev›] at ‹y ∈ {x} ∪ ext›; contradiction)
-    · have ⟨_, _⟩ : ev ≠ x ∧ ev ∉ ext := by simpa using ‹ev ∉ {x} ∪ ext›
-      simp [‹ev ≠ x› , ←‹σ ∼[{x} ∪ ext] τ› x] at ‹((τ[ev ↦ 0 :: τ ev]) x).head? = none›
-  case SEQ.some.some Q R ih₁ ih₂ σ τ =>
-    simp only [LOOP.eval, l2s, SCORE.eval]
-    have : Q.ids ∪ (R.ids ∪ ext) = R.ids ∪ (Q.ids ∪ ext) := by sorry
-    have : Q.ids ∪ R.ids ∪ ext = R.ids ∪ (Q.ids ∪ ext) := by sorry
-    have : ev ∉ Q.ids ∪ (R.ids ∪ ext) := by simpa using ‹ev ∉ Q.ids ∪ R.ids ∪ ext›
-    have : σ ∼[Q.ids ∪ (R.ids ∪ ext)] (τ[ev ↦ 0 :: τ ev]) := by
-      intro y _
-      cases eq_or_ne y ev
-      · rw [‹y = ev›] at ‹y ∈ Q.ids ∪ (R.ids ∪ ext)›
-        contradiction
-      · have : σ ∼[Q.ids ∪ (R.ids ∪ ext)] τ := by simpa using ‹σ ∼[Q.ids ∪ R.ids ∪ ext] τ›
-        simpa [‹y ≠ ev›.symm] using (‹σ ∼[Q.ids ∪ (R.ids ∪ ext)] τ› y ‹y ∈ Q.ids ∪ (R.ids ∪ ext)›)
-    have : LOOP.eval Q σ ∼[R.ids ∪ (Q.ids ∪ ext)] SCORE.eval (l2s ev Q) (τ[ev ↦ 0 :: τ ev]) := by
-      simpa [‹Q.ids ∪ (R.ids ∪ ext) = R.ids ∪ (Q.ids ∪ ext)›] using ih₁ ‹ev ∉ Q.ids ∪ (R.ids ∪ ext)› ‹σ ∼[Q.ids ∪ (R.ids ∪ ext)] (τ[ev ↦ 0 :: τ ev])›
+  case INC x =>
+    have ⟨_, _⟩ : ev ≠ x ∧ ev ∉ ext := by simpa using ‹ev ∉ {x} ∪ ext›
+    have : (τ x).head? = some ↑(σ x) := by
+      have : x ∈ {x} ∪ ext := by simp
+      simpa [‹ev ≠ x›] using (‹σ ∼[{x} ∪ ext] τ› x ‹x ∈ {x} ∪ ext›).symm
+    simp only [LOOP.eval, l2s', SCORE.eval, ‹(τ x).head? = some ↑(σ x)›]
+    intros y _
+    cases eq_or_ne x y
+    · simp [‹x = y›]
+    · simpa [‹x ≠ y›] using ‹σ ∼[{x} ∪ ext] τ› y ‹y ∈ {x} ∪ ext›
+  case SEQ Q R ih₁ ih₂ =>
+    have ⟨_, ⟨_, _⟩⟩ : ev ∉ Q.ids ∧ ev ∉ R.ids ∧ ev ∉ ext := by simpa using ‹ev ∉ Q.ids ∪ R.ids ∪ ext›
+    simp only [LOOP.eval, l2s', SCORE.eval]
+    have : LOOP.eval Q σ ∼[R.ids ∪ (Q.ids ∪ ext)] SCORE.eval (l2s' ev Q) τ := by
+      have : Q.ids ∪ (R.ids ∪ ext) = R.ids ∪ (Q.ids ∪ ext) :=
+        calc
+          Q.ids ∪ (R.ids ∪ ext)
+          _ = (Q.ids ∪ R.ids) ∪ ext := by simp [Finset.union_assoc]
+          _ = (R.ids ∪ Q.ids) ∪ ext := by simp [Finset.union_comm]
+          _ = R.ids ∪ (Q.ids ∪ ext) := by simp [Finset.union_assoc]
+      have : σ ∼[Q.ids ∪ (R.ids ∪ ext)] τ := by
+        simpa [‹Q.ids ∪ (R.ids ∪ ext) = R.ids ∪ (Q.ids ∪ ext)›]
+          using ‹σ ∼[Q.ids ∪ R.ids ∪ ext] τ›
+      have : ev ∉ Q.ids ∪ (R.ids ∪ ext) := by
+        simpa using ‹ev ∉ Q.ids ∪ R.ids ∪ ext›
+      simpa [‹Q.ids ∪ (R.ids ∪ ext) = R.ids ∪ (Q.ids ∪ ext)›]
+        using ih₁ ‹ev ∉ Q.ids ∪ (R.ids ∪ ext)› ‹(τ ev).head? = some 0› ‹σ ∼[Q.ids ∪ (R.ids ∪ ext)] τ›
+    have ⟨⟨σ', _⟩, ⟨τ', _⟩⟩ : (∃σ', (LOOP.eval Q σ) = some σ') ∧ (∃τ', (SCORE.eval (l2s' ev Q) τ) = some τ') :=
+        eq_states_idents_no_fail ‹LOOP.eval Q σ ∼[R.ids ∪ (Q.ids ∪ ext)] SCORE.eval (l2s' ev Q) τ›
+    have : Q.ids ∪ R.ids ∪ ext = R.ids ∪ (Q.ids ∪ ext) :=
+      calc
+          Q.ids ∪ R.ids ∪ ext
+          _ = R.ids ∪ Q.ids ∪ ext := by simp [Finset.union_comm]
+          _ = R.ids ∪ (Q.ids ∪ ext) := by simp [Finset.union_assoc]
+    have : σ' ∼[R.ids ∪ (Q.ids ∪ ext)] τ' := by
+      simpa [‹LOOP.eval Q (some σ) = σ'›, ‹SCORE.eval (l2s' ev Q) (some τ) = τ'›]
+        using ‹LOOP.eval Q σ ∼[R.ids ∪ (Q.ids ∪ ext)] SCORE.eval (l2s' ev Q) τ›
+    have : (τ' ev).head? = some 0 :=
+      ev_invariant' ‹ev ∉ Q.ids› ‹(τ ev).head? = some 0› ‹SCORE.eval (l2s' ev Q) τ = τ'›
     have : ev ∉ R.ids ∪ (Q.ids ∪ ext) := by
       simpa [‹Q.ids ∪ R.ids ∪ ext = R.ids ∪ (Q.ids ∪ ext)›] using ‹ev ∉ Q.ids ∪ R.ids ∪ ext›
-    simpa [←‹Q.ids ∪ R.ids ∪ ext = R.ids ∪ (Q.ids ∪ ext)›] using ih₂ ‹ev ∉ R.ids ∪ (Q.ids ∪ ext)› ‹LOOP.eval Q σ ∼[R.ids ∪ (Q.ids ∪ ext)] SCORE.eval (l2s ev Q) (τ[ev ↦ 0 :: τ ev])›
-  case LOOP.some.some x Q ih σ τ =>
+    simpa [←‹Q.ids ∪ R.ids ∪ ext = R.ids ∪ (Q.ids ∪ ext)›, ←‹SCORE.eval (l2s' ev Q) τ = τ'›, ←‹LOOP.eval Q σ = σ'›]
+      using ih₂ ‹ev ∉ R.ids ∪ (Q.ids ∪ ext)› ‹(τ' ev).head? = some 0› ‹σ' ∼[R.ids ∪ (Q.ids ∪ ext)] τ'›
+  case LOOP x Q ih =>
     have ⟨_, ⟨_, _⟩⟩ : ev ≠ x ∧ ev ∉ Q.ids ∧ ev ∉ ext := by simpa using ‹ev ∉ {x} ∪ Q.ids ∪ ext›
-    have : ((τ[ev ↦ 0 :: τ ev]) x).head? = some ↑(σ x) := by
+    have : (τ x).head? = some ↑(σ x) := by
       have : x ∈ {x} ∪ Q.ids ∪ ext := by simp
       simpa [‹ev ≠ x›] using (‹σ ∼[{x} ∪ Q.ids ∪ ext] τ› x ‹x ∈ {x} ∪ Q.ids ∪ ext›).symm
-    simp only [LOOP.eval, l2s, SCORE.eval, ‹((τ[ev ↦ 0 :: τ ev]) x).head? = some ↑(σ x)›]
-    induction σ x
+    simp only [LOOP.eval, l2s', SCORE.eval, ‹(τ x).head? = some ↑(σ x)›]
+    clear ‹(τ x).head? = some ↑(σ x)›
+    induction σ x generalizing σ τ
     case zero =>
-      have : σ ∼[{x} ∪ Q.ids ∪ ext] (τ[ev ↦ 0 :: τ ev]) := by
-        intro y _
-        cases eq_or_ne y ev
-        · rw [‹y = ev›] at ‹y ∈ {x} ∪ Q.ids ∪ ext›
-          contradiction
-        · simpa [‹y ≠ ev›.symm] using (‹σ ∼[{x} ∪ Q.ids ∪ ext] τ› y ‹y ∈ {x} ∪ Q.ids ∪ ext›)
-      simpa using ‹σ ∼[{x} ∪ Q.ids ∪ ext] (τ[ev ↦ 0 :: τ ev])›
-    case succ _ ih₂ => sorry
-    /- split
-    · have : x ∈ {x} ∪ Q.ids ∪ ext := Finset.mem_union_left ext (Finset.mem_union_left Q.ids (Finset.mem_singleton_self x))
-      simp only [←(Option.some_inj.mp (Eq.trans (‹σ ∼[{x} ∪ Q.ids ∪ ext] τ› x ‹x ∈ {x} ∪ Q.ids ∪ ext›) ‹(τ x).head? = some _›))]
-      generalize some σ = s, some τ = t at ‹σ =[{x} ∪ Q.ids ∪ ext]ₛ τ›
-      induction σ x generalizing s t
-      case zero =>
-        simpa using ‹s =[{x} ∪ Q.ids ∪ ext]ₛ t›
-      case succ _ ih₂ =>
-        have : {x} ∪ Q.ids ∪ ext = Q.ids ∪ ({x} ∪ ext) := by
-          rw [←Finset.union_assoc, Finset.union_comm Q.ids {x}, Finset.union_assoc]
-        rw [‹{x} ∪ Q.ids ∪ ext = Q.ids ∪ ({x} ∪ ext)›] at ‹s =[{x} ∪ Q.ids ∪ ext]ₛ t› ‹ev ∉ {x} ∪ Q.ids ∪ ext›
-        have : LOOP.eval Q s =[{x} ∪ Q.ids ∪ ext]ₛ SCORE.eval (l2s' ev Q) t := by
-          simpa [‹{x} ∪ Q.ids ∪ ext = Q.ids ∪ ({x} ∪ ext)›] using ih ‹ev ∉ Q.ids ∪ ({x} ∪ ext)› ‹s =[Q.ids ∪ ({x} ∪ ext)]ₛ t›
-        exact ih₂ (LOOP.eval Q s) (SCORE.eval (l2s' ev Q) t) ‹LOOP.eval Q s =[{x} ∪ Q.ids ∪ ext]ₛ SCORE.eval (l2s' ev Q) t›
-    · simp [←‹σ =[{x} ∪ Q.ids ∪ ext]ₛ τ› x] at ‹(τ x).head? = none› -/
+      simpa using ‹σ ∼[{x} ∪ Q.ids ∪ ext] τ›
+    case succ m ih₂ =>
+      have : LOOP.eval Q σ ∼[Q.ids ∪ ext] SCORE.eval (l2s' ev Q) τ := by
+        have : σ ∼[{x} ∪ (Q.ids ∪ ext)] τ := by simpa using ‹σ ∼[{x} ∪ Q.ids ∪ ext] τ›
+        exact ih (Finset.not_mem_union.mpr ⟨‹ev ∉ Q.ids›, ‹ev ∉ ext›⟩)
+          ‹(τ ev).head? = some 0›
+          (eq_states_idents_reduce_right ‹σ ∼[{x} ∪ (Q.ids ∪ ext)] τ›)
+      have ⟨⟨σ', _⟩, ⟨τ', _⟩⟩ : (∃σ', (LOOP.eval Q σ) = some σ') ∧ (∃τ', (SCORE.eval (l2s' ev Q) τ) = some τ') :=
+        eq_states_idents_no_fail ‹LOOP.eval Q σ ∼[Q.ids ∪ ext] SCORE.eval (l2s' ev Q) τ›
+      have : σ' ∼[{x} ∪ Q.ids ∪ ext] τ' := by
+        have : x ∉ Q.mids := sorry
+        simpa [←‹SCORE.eval (l2s' ev Q) τ = τ'›, ←‹LOOP.eval Q σ = σ'›]
+          using eq_states_idents_extend ‹ev ∉ Q.ids›
+            ‹x ∉ Q.mids›
+            ‹LOOP.eval Q σ ∼[Q.ids ∪ ext] SCORE.eval (l2s' ev Q) τ›
+      simpa [←‹SCORE.eval (l2s' ev Q) τ = τ'›, ←‹LOOP.eval Q σ = σ'›]
+        using ih₂ (ev_invariant' ‹ev ∉ Q.ids› ‹(τ ev).head? = some 0› ‹SCORE.eval (l2s' ev Q) τ = τ'›)
+          ‹σ' ∼[{x} ∪ Q.ids ∪ ext] τ'›
+
+lemma soundness_ext {s : LOOP.State} {t : SCORE.State} {ev : Ident} {ext : Finset Ident} (P : LOOP.Com) : ev ∉ (P.ids ∪ ext) → s ∼[P.ids ∪ ext] t → (LOOP.eval P s) ∼[P.ids ∪ ext] (SCORE.eval (l2s ev P) t) := by
+  intros h_ev eqs
+  cases s <;> cases t
+  case some.some σ τ =>
+    simp only [l2s, SCORE.eval]
+    have : ((τ[ev ↦ 0 :: τ ev]) ev).head? = some 0 := by simp
+    exact soundness'_ext P ‹ev ∉ P.ids ∪ ext›
+      ‹((τ[ev ↦ 0 :: τ ev]) ev).head? = some 0›
+      (eq_states_idents_update_right ‹σ ∼[P.ids ∪ ext] τ› ‹ev ∉ P.ids ∪ ext›)
   all_goals (simp only [eq_states_idents] at eqs)
 
-theorem soundness {s : LOOP.State} {t : SCORE.State} {ev : Ident} (P : LOOP.Com) : ev ∉ P.ids → s =[P.ids]ₛ t → (LOOP.eval P s) =[P.ids]ₛ (SCORE.eval (l2s' ev P) t) := by
-  rw [←Finset.union_empty P.ids]
-  exact soundness_ext P
+theorem soundness {s : LOOP.State} {t : SCORE.State} {ev : Ident} (P : LOOP.Com) : ev ∉ P.ids → s ∼[P.ids] t → (LOOP.eval P s) ∼[P.ids] (SCORE.eval (l2s ev P) t) := by
+  simpa using @soundness_ext s t ev ∅ P
 
 end Compiler
