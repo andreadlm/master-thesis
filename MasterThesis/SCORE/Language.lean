@@ -208,7 +208,7 @@ mutual
       | INC x   => match (σ x).head? with
                    | some v => σ[x ↦ ((v - 1) :: (σ x).tail)]
                    | none   => ⊥
-      | SEQ P Q => (evalI Q) (evalI P s)
+      | SEQ P Q => (evalI P) (evalI Q s)
       | FOR x P => match (σ x).head? with
                    | some v => match v with
                                | Int.ofNat   k => (fun t => evalI P t)^[k] s
