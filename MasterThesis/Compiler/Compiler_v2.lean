@@ -171,7 +171,7 @@ lemma ev_invariant' {τ τ' : SCORE.Store} {ev : Ident} {P : LOOP.Com} : ev ∉ 
 
 lemma soundness'_ext {σ : LOOP.Store} {τ : SCORE.Store} {ev : Ident} {ext : Finset Ident} (P : LOOP.Com) : ev ∉ (P.ids ∪ ext) → (τ ev).head? = some 0 → σ ∼[P.ids ∪ ext] τ → (LOOP.eval P σ) ∼[P.ids ∪ ext] (SCORE.eval (l2s' ev P) τ) := by
   intros h_head_ev h_ev eqs
-  induction  P generalizing σ τ ext <;> rw [LOOP.Com.ids] at *
+  induction P generalizing σ τ ext <;> rw [LOOP.Com.ids] at *
   case SKIP =>
      simpa only [LOOP.eval, l2s', SCORE.eval]
   case ZER x =>
@@ -248,7 +248,7 @@ lemma soundness'_ext {σ : LOOP.Store} {τ : SCORE.Store} {ev : Ident} {ext : Fi
           _ = R.ids ∪ Q.ids ∪ ext := by simp [Finset.union_comm]
           _ = R.ids ∪ (Q.ids ∪ ext) := by simp [Finset.union_assoc]
     have : σ' ∼[R.ids ∪ (Q.ids ∪ ext)] τ' := by
-      simpa [‹LOOP.eval Q (some σ) = σ'›, ‹SCORE.eval (l2s' ev Q) (some τ) = τ'›]
+      simpa [‹LOOP.eval Q σ = σ'›, ‹SCORE.eval (l2s' ev Q) τ = τ'›]
         using ‹LOOP.eval Q σ ∼[R.ids ∪ (Q.ids ∪ ext)] SCORE.eval (l2s' ev Q) τ›
     have : (τ' ev).head? = some 0 :=
       ev_invariant' ‹ev ∉ Q.ids› ‹(τ ev).head? = some 0› ‹SCORE.eval (l2s' ev Q) τ = τ'›
@@ -267,19 +267,26 @@ lemma soundness'_ext {σ : LOOP.Store} {τ : SCORE.Store} {ev : Ident} {ext : Fi
     case zero =>
       simpa using ‹σ ∼[{x} ∪ Q.ids ∪ ext] τ›
     case succ m ih₂ =>
-      have : LOOP.eval Q σ ∼[Q.ids ∪ ext] SCORE.eval (l2s' ev Q) τ := by
-        have : σ ∼[{x} ∪ (Q.ids ∪ ext)] τ := by simpa using ‹σ ∼[{x} ∪ Q.ids ∪ ext] τ›
-        exact ih (Finset.not_mem_union.mpr ⟨‹ev ∉ Q.ids›, ‹ev ∉ ext›⟩)
+      have : {x} ∪ Q.ids ∪ ext = Q.ids ∪ ({x} ∪ ext) :=
+        calc
+          {x} ∪ Q.ids ∪ ext
+          _ = Q.ids ∪ {x} ∪ ext := by simp [Finset.union_comm]
+          _ = Q.ids ∪ ({x} ∪ ext) := by simp [Finset.union_assoc]
+      have : LOOP.eval Q σ ∼[Q.ids ∪ ({x} ∪ ext)] SCORE.eval (l2s' ev Q) τ := by
+        have : σ ∼[Q.ids ∪ ({x} ∪ ext)] τ := by
+          simpa [‹{x} ∪ Q.ids ∪ ext = Q.ids ∪ ({x} ∪ ext)›]
+            using ‹σ ∼[{x} ∪ Q.ids ∪ ext] τ›
+        have : ev ∉ Q.ids ∪ ({x} ∪ ext) := by
+          simpa [‹{x} ∪ Q.ids ∪ ext = Q.ids ∪ ({x} ∪ ext)›]
+            using ‹ev ∉ {x} ∪ Q.ids ∪ ext›
+        exact ih ‹ev ∉ Q.ids ∪ ({x} ∪ ext)›
           ‹(τ ev).head? = some 0›
-          (eq_states_idents_reduce_right ‹σ ∼[{x} ∪ (Q.ids ∪ ext)] τ›)
+          ‹σ ∼[Q.ids ∪ ({x} ∪ ext)] τ›
       have ⟨⟨σ', _⟩, ⟨τ', _⟩⟩ : (∃σ', (LOOP.eval Q σ) = some σ') ∧ (∃τ', (SCORE.eval (l2s' ev Q) τ) = some τ') :=
-        eq_states_idents_no_fail ‹LOOP.eval Q σ ∼[Q.ids ∪ ext] SCORE.eval (l2s' ev Q) τ›
+        eq_states_idents_no_fail ‹LOOP.eval Q σ ∼[Q.ids ∪ ({x} ∪ ext)] SCORE.eval (l2s' ev Q) τ›
       have : σ' ∼[{x} ∪ Q.ids ∪ ext] τ' := by
-        have : x ∉ Q.mids := sorry
-        simpa [←‹SCORE.eval (l2s' ev Q) τ = τ'›, ←‹LOOP.eval Q σ = σ'›]
-          using eq_states_idents_extend ‹ev ∉ Q.ids›
-            ‹x ∉ Q.mids›
-            ‹LOOP.eval Q σ ∼[Q.ids ∪ ext] SCORE.eval (l2s' ev Q) τ›
+        simpa [‹SCORE.eval (l2s' ev Q) τ = τ'›, ‹LOOP.eval Q σ = σ'›, ←‹{x} ∪ Q.ids ∪ ext = Q.ids ∪ ({x} ∪ ext)›]
+          using ‹LOOP.eval Q σ ∼[Q.ids ∪ ({x} ∪ ext)] SCORE.eval (l2s' ev Q) τ›
       simpa [←‹SCORE.eval (l2s' ev Q) τ = τ'›, ←‹LOOP.eval Q σ = σ'›]
         using ih₂ (ev_invariant' ‹ev ∉ Q.ids› ‹(τ ev).head? = some 0› ‹SCORE.eval (l2s' ev Q) τ = τ'›)
           ‹σ' ∼[{x} ∪ Q.ids ∪ ext] τ'›

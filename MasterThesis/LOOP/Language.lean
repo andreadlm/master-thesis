@@ -108,18 +108,6 @@ def ids (P : Com) : Finset Ident :=
   | SEQ P Q  => ids P ∪ ids Q
   | LOOP x P => {x} ∪ ids P
 
-/-- Computes the set of identifiers that are modified by a LOOP command. -/
-def mids (P : Com) : Finset Ident :=
-  match P with
-  | SKIP     => {}
-  | ZER x    => {x}
-  | ASN x y  => {x, y}
-  | INC x    => {x}
-  | SEQ P Q  => mids P ∪ mids Q
-  | LOOP _ P => mids P
-
-axiom educated {x : Ident} {P Q : Com} : P = LOOP x Q → x ∉ Q.ids
-
 /-- Computes the string representation of a LOOP command. -/
 def comToString (indLv : Nat) (P : Com) : String :=
   let rec ind (indLv : Nat) : String :=
