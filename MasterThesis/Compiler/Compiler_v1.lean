@@ -42,8 +42,6 @@ def l2s (P : LOOP.Com) : SCORE.Com :=
 
 end v1
 
-open v1
-
 /-- Notion of equivalence between LOOP states and SCORE states. A LOOP state `s` is said to be
 equivalent to a SCORE state `t` if for each identifier `x` the value of the register identified
 by `x` in `s` is equal to the current value of the variable identified by `x` in `t`. -/
@@ -77,6 +75,8 @@ lemma eq_states_INC {σ : LOOP.Store} {t : SCORE.State} {x : Ident} {v : ℕ} : 
     · simpa [‹x ≠ y›] using ‹σ[x ↦ v] ∼ τ› y
   case none =>
     contradiction
+
+namespace v1
 
 /-- Let `P` be a LOOP program, `σ` a LOOP state and `τ` a SCORE state. If the two states are equivalent,
 then the evaluation of `P` in `σ` and the compiled SCORE program `l2s P` in `τ` end in two equivalent
@@ -118,5 +118,7 @@ theorem soundness {s : LOOP.State} {t : SCORE.State} (P : LOOP.Com) : s ∼ t �
     case succ _ ih₂ =>
       exact ih₂ (LOOP.eval Q s) (SCORE.eval (l2s Q) t) (ih ‹s ∼ t›)
   all_goals (simp only [eq_states] at eqs)
+
+end v1
 
 end Compiler
