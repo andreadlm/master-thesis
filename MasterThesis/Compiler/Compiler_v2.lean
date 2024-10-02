@@ -53,16 +53,11 @@ lemma eq_states_idents_no_fail {σ : LOOP.Store} {τ : SCORE.Store} {P : LOOP.Co
   case inr.inl eq₁ eq₂ | inl.inr eq₁ eq₂ | inl.inl eq₁ eq₂ =>
     simp [eq₁, eq₂, eq_states_idents] at ‹LOOP.eval P σ ∼[ids] SCORE.eval Q τ›
 
-lemma eq_states_idents_reduce_left {s : LOOP.State} {t : SCORE.State} {a b : Finset Ident} : s ∼[a ∪ b] t → s ∼[a] t := by
-  intro eqs
-  cases s <;> cases t
-  case some.some σ τ =>
-    intros x _
-    exact ‹σ ∼[a ∪ b] τ› x (Finset.mem_union_left b ‹x ∈ a›)
-  all_goals (simp [eq_states_idents] at eqs)
-
-lemma eq_states_idents_reduce_right {s : LOOP.State} {t : SCORE.State} {a b : Finset Ident} : s ∼[a ∪ b] t → s ∼[b] t := by
-  sorry
+lemma eq_states_idents_update {σ : LOOP.Store} {τ : SCORE.Store} {ids : Finset Ident} (x : Ident) (v : ℕ) : σ ∼[ids] τ → σ[x ↦ v] ∼[ids] τ[x ↦ ↑v :: τ x] := by
+  intros _ y _
+  cases eq_or_ne x y
+  · simp [‹x = y›]
+  · simpa [‹x ≠ y›] using ‹σ ∼[ids] τ› y ‹y ∈ ids›
 
 lemma eq_states_idents_update_right {σ : LOOP.Store} {τ : SCORE.Store} {ids : Finset Ident} {x : Ident} {l : List Int} : σ ∼[ids] τ → x ∉ ids → σ ∼[ids] τ[x ↦ l] := by
   intros _ _ y _
@@ -214,10 +209,7 @@ lemma soundness'_ext {σ : LOOP.Store} {τ : SCORE.Store} {ev : Ident} {ext : Fi
   case ZER x =>
     have ⟨_, _⟩ : ev ≠ x ∧ ev ∉ ext := by simpa using ‹ev ∉ {x} ∪ ext›
     simp only [LOOP.eval, l2s', SCORE.eval]
-    intros y _
-    cases eq_or_ne x y
-    · simp [‹x = y›]
-    · simpa [‹x ≠ y›] using ‹σ ∼[{x} ∪ ext] τ› y ‹y ∈ {x} ∪ ext›
+    exact eq_states_idents_update x 0 ‹σ ∼[{x} ∪ ext] τ›
   case ASN x y =>
     have ⟨_, ⟨_, _⟩⟩ : ev ≠ x ∧ ev ≠ y ∧ ev ∉ ext := by simpa using ‹ev ∉ {x, y} ∪ ext›
     have : (τ y).head? = some (σ y) := by
