@@ -5,6 +5,7 @@ Authors: Andrea Delmastro
 -/
 import MasterThesis.SCORE.Language
 import MasterThesis.LOOP.Language
+import MasterThesis.Compiler.Commons
 
 /-!
 # Compiler for LOOP language, version 1
@@ -21,6 +22,7 @@ namespace Compiler
 
 open LOOP Com
 open SCORE Com
+open Commons
 
 namespace v1
 
@@ -61,21 +63,6 @@ lemma eq_states_update {σ : LOOP.Store} {τ : SCORE.Store} (x : Ident) (v : ℕ
   · simp [‹x = y›]
   · simpa [‹x ≠ y›] using ‹σ ∼ τ› y
 
-/-- Evaluating the SCORE command `INC x` is equivalent to incrementing its current value by one in a
-LOOP state.  -/
-lemma eq_states_INC {σ : LOOP.Store} {t : SCORE.State} {x : Ident} {v : ℕ} : σ[x ↦ v] ∼ t → σ[x ↦ v + 1] ∼ SCORE.eval (.INC x) t := by
-  intro
-  cases t
-  case some τ _ =>
-    rw [SCORE.eval]
-    simp only [←‹σ[x ↦ v] ∼ τ› x]
-    intro y
-    cases eq_or_ne x y
-    · simp [‹x = y›]
-    · simpa [‹x ≠ y›] using ‹σ[x ↦ v] ∼ τ› y
-  case none =>
-    contradiction
-
 namespace v1
 
 /-- Let `P` be a LOOP program, `σ` a LOOP state and `τ` a SCORE state. If the two states are equivalent,
@@ -94,18 +81,24 @@ theorem soundness {s : LOOP.State} {t : SCORE.State} (P : LOOP.Com) : s ∼ t �
     rw [LOOP.eval]
     cases eq_or_ne x y
     · simpa [l2s, ‹x = y›, SCORE.eval]
-    · have : SCORE.eval (l2s (.ASN x y)) τ = (fun τ ↦ SCORE.eval (.INC x) τ)^[σ y] (τ[x ↦ 0 :: τ x]) := by
-        simp [l2s, ‹x ≠ y›, SCORE.eval, ←(‹σ ∼ τ› y)]
-      rw [this]; clear this
-      induction (σ y)
-      case zero =>
-        simpa using eq_states_update x 0 ‹σ ∼ τ›
-      case succ m ih =>
-        simpa [Nat.add_comm m 1, Function.iterate_add_apply] using eq_states_INC ih
+    · have : SCORE.eval (l2s (ASN x y)) τ = τ[x ↦ (σ y) :: τ x] := by
+        calc
+          SCORE.eval (l2s (ASN x y)) τ
+          _ = SCORE.eval (FOR y (INC x)) (τ[x ↦ 0 :: τ x]) :=
+                by simp [l2s, ‹x ≠ y›, SCORE.eval]
+          _ = τ[x ↦ (σ y) :: τ x] := by
+                have : ((τ[x ↦ 0 :: τ x]) x).head? = some 0 := by simp
+                have : ((τ[x ↦ 0 :: τ x]) y).head? = some (σ y) := by simpa [‹x ≠ y›] using (‹σ ∼ τ› y).symm
+                simpa using for_inc ‹((τ[x ↦ 0 :: τ x]) x).head? = some 0›
+                                    ‹((τ[x ↦ 0 :: τ x]) y).head? = some (σ y)›
+      simpa [‹SCORE.eval (l2s (ASN x y)) τ = τ[x ↦ (σ y) :: τ x]›]
+        using  eq_states_update x (σ y) ‹σ ∼ τ›
   case INC.some.some x σ τ =>
-    rw [LOOP.eval, l2s]
-    rw [←@LOOP.Store.update_no_update σ x] at ‹σ ∼ τ›
-    exact eq_states_INC ‹σ[x ↦ σ x] ∼ τ›
+    simp [LOOP.eval, l2s, SCORE.eval, (‹σ ∼ τ› x).symm]
+    intro y
+    cases eq_or_ne x y
+    · simp [‹x = y›]
+    · simpa [‹x ≠ y›] using ‹σ ∼ τ› y
   case SEQ.some.some Q R ih₁ ih₂ σ τ =>
     rw [LOOP.eval, l2s, SCORE.eval]
     exact ih₂ (ih₁ ‹σ ∼ τ›)
